@@ -3,6 +3,8 @@ import { PostgresAuthRepository } from "../repositories/postgresAuthRepository";
 import pool from "../config/database";
 import { AuthService } from "../../application/services/authServices";
 import { AuthController } from "../server/controllers/authController";
+import { ValidateRequest } from "../validation/middleware/validationMiddleware";
+import { registerSchema } from "../validation/schemas/authSchema";
 
 const router = Router();
 
@@ -39,12 +41,6 @@ const authController = new AuthController(authService);
  *                   - admin
  *                   - user
  *                   - driver
- *               email_verified:
- *                 type: boolean
- *                 description: User email verified
- *               requires_password_change:
- *                 type: boolean
- *                 description: User requires password change
  *     responses:
  *       200:
  *         description: User created successfully
@@ -53,7 +49,7 @@ const authController = new AuthController(authService);
  *       500:
  *         description: Internal server error
  */
-router.post("/register", authController.registerUser);
+router.post("/register", ValidateRequest(registerSchema), authController.registerUser);
 
 /**
  * @swagger

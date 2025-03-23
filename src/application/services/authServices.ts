@@ -3,7 +3,7 @@ import { AuthRepository } from "@/domain/ports/AuthRepository";
 export class AuthService {
 	constructor(private readonly authRepository: AuthRepository) {}
 	
-	async registerUser(): Promise<void> {
+	async registerUser(user: any): Promise<void> {
 		console.log("AuthService.registerUser()");
 	}
 	
