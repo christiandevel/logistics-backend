@@ -1,6 +1,8 @@
 import dotenv from "dotenv";
-import { DatabaseInitializerFactory, DatabaseType } from "./infraestructure/database/databaseInitializerFactory";
+import colors from "colors";
+
 import app from "./infraestructure/server/app";
+import { DatabaseInitializerFactory, DatabaseType } from "./infraestructure/database/databaseInitializerFactory";
 
 dotenv.config();
 
@@ -14,10 +16,11 @@ const startServer = async () => {
 		await databaseInitializer.init();
 		
 		app.listen(PORT, () => {
-			console.log(`Server running on port ${PORT}`);
+			console.log(colors.green.bold(`Server running on port ${PORT}`));
+			console.log(colors.blue.bold(`Swagger UI available at http://localhost:${PORT}/api-docs`));
 		});
 	} catch (error) {
-		console.error(error);
+		console.error(colors.red.bold(`Error starting server: ${error}`));
 		process.exit(1);
 	}
 };
