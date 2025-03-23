@@ -1,5 +1,6 @@
 import express from "express";
 import swaggerUi from "swagger-ui-express";
+import authRoutes from "../routes/authRoutes";
 
 import { swaggerSpec } from "../config/swagger";
 
@@ -13,6 +14,9 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
 	customSiteTitle: "API Logistics",
 	customfavIcon: '/favicon.ico'
 }));
+
+// routes
+app.use('/api/auth', authRoutes);
 
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error(err);
