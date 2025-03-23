@@ -2,24 +2,52 @@ import { IDatabaseInitializer } from "@/domain/ports/DatabaseInitializer";
 import { Pool } from "pg";
 import pool from "../config/database";
 import colors from "colors";
-
-
+import bcrypt from "bcrypt";
 
 export class PostgresDatabaseInitializer implements IDatabaseInitializer {
-	
-	private readonly pool: Pool;
-	
-	constructor() {
-		this.pool = pool;
-	}
-	
+  private readonly pool: Pool;
+
+  constructor() {
+    this.pool = pool;
+  }
+
   async init(): Promise<void> {
-		try {
-			await this.pool.query(SQL_QUERIES.CHECK_DATABASE_CONNECTION);
-		} catch (error) {
-			console.log(colors.red.bold(`We couldn't connect to the database: ${error}`));
-			process.exit(1);
-		}
+    try {
+      await this.pool.query(SQL_QUERIES.CHECK_DATABASE_CONNECTION);
+
+      await this.pool.query(SQL_QUERIES.CREATE_USER_ROLE_ENUM);
+      await this.pool.query(SQL_QUERIES.CREATE_USER_TABLE);
+      await this.pool.query(SQL_QUERIES.CREATE_SHIPMENTS_TABLE);
+      await this.pool.query(SQL_QUERIES.CREATE_HISTORY_SHIPMENTS_TABLE);
+
+      const users = INITAL_DATA;
+      for (const user of users) {
+        const existUser = await this.pool.query(SQL_QUERIES.CHECK_USER_EXISTS, [
+          user.email,
+        ]);
+
+        if (existUser.rows.length === 0) {
+          const salt = bcrypt.genSaltSync(10);
+          const hash = bcrypt.hashSync(user.password, salt);
+
+          await this.pool.query(SQL_QUERIES.INSET_USER, [
+            user.email,
+            hash,
+            user.full_name,
+            user.role,
+            user.email_verified,
+            user.requires_password_change,
+          ]);
+        }
+      }
+
+      console.log(colors.green.bold("Users created successfully"));
+    } catch (error) {
+      console.log(
+        colors.red.bold(`We couldn't connect to the database: ${error}`)
+      );
+      process.exit(1);
+    }
   }
 
   async disconnect(): Promise<void> {
@@ -124,3 +152,39 @@ const SQL_QUERIES = {
 		);
 	`,
 };
+
+interface User {
+  email: string;
+  password: string;
+  full_name: string;
+  role: "admin" | "user" | "driver";
+  email_verified: boolean;
+  requires_password_change: boolean;
+}
+
+const INITAL_DATA: User[] = [
+  {
+    email: "admin@admin.com",
+    password: "admin2025",
+    full_name: "Administrator",
+    role: "admin" as const,
+    email_verified: true,
+    requires_password_change: false,
+  },
+  {
+    email: "user@user.com",
+    password: "user2025",
+    full_name: "User",
+    role: "user" as const,
+    email_verified: true,
+    requires_password_change: false,
+  },
+  {
+    email: "driver@driver.com",
+    password: "driver2025",
+    full_name: "Driver",
+    role: "driver" as const,
+    email_verified: true,
+    requires_password_change: false,
+  },
+];
