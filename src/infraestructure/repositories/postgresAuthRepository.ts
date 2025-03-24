@@ -38,8 +38,15 @@ export class PostgresAuthRepository implements AuthRepository {
 		console.log("PostgresAuthRepository.loginUser()");
 	}
 	
-	async forgotPassword(): Promise<void> {
-		console.log("PostgresAuthRepository.forgotPassword()");
+	async forgotPassword(email: string, resetToken: string, resetExpires: Date): Promise<void> {
+		const query = `
+			UPDATE users
+			SET reset_password_token = $1,
+				reset_password_expires_at = $2
+			WHERE email = $3;
+		`
+		
+		await this.pool.query(query, [resetToken, resetExpires, email]);
 	}
 	
 	async resetPassword(): Promise<void> {
@@ -107,9 +114,11 @@ export class PostgresAuthRepository implements AuthRepository {
 			full_name: row.full_name,
 			role: row.role,
 			email_verified: row.email_verified,
-			requires_password_change: row.requires_password_change,
 			confirmation_token: row.confirmation_token,
 			confirmation_expires_at: row.confirmation_expires_at,
+			requires_password_change: row.requires_password_change,
+			reset_password_token: row.reset_password_token,
+			reset_password_expires_at: row.reset_password_expires_at
 		}
 	}
 }
