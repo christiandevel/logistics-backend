@@ -8,6 +8,8 @@ import { checkRole } from "../server/middleware/checkRole";
 
 import { ShipmentService } from "../../application/services/shipmentService";
 import { ShipmentController } from "../server/controllers/shipmentController";
+import { createShipmentSchema } from "../validation/schemas/shipmentSchema";
+import { ValidateRequest } from "../validation/middleware/validationMiddleware";
 
 const shipmentRoutes = Router();
 
@@ -152,7 +154,7 @@ const shipmentController = new ShipmentController(shipmentService);
  * /api/shipments:
  *   post:
  *     summary: Create a new shipment
- *     description: Creates a new shipment with the provided details. Requires authentication.
+ *     description: Creates a new shipment with the provided details. The user ID is obtained from the JWT token.
  *     tags: [Shipments]
  *     security:
  *       - BearerAuth: []
@@ -161,7 +163,76 @@ const shipmentController = new ShipmentController(shipmentService);
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/NewShipment'
+ *             type: object
+ *             required:
+ *               - origin
+ *               - destination
+ *               - destinationZipcode
+ *               - destinationCity
+ *               - weight
+ *               - productType
+ *             properties:
+ *               origin:
+ *                 type: string
+ *                 minLength: 10
+ *                 maxLength: 200
+ *                 description: Complete pickup address
+ *                 example: "123 Main St, New York, NY 10001"
+ *               destination:
+ *                 type: string
+ *                 minLength: 10
+ *                 maxLength: 200
+ *                 description: Complete delivery address
+ *                 example: "456 Park Ave, Los Angeles, CA 90001"
+ *               destinationZipcode:
+ *                 type: string
+ *                 pattern: '^[0-9]{5}$'
+ *                 description: 5-digit zipcode of the delivery location
+ *                 example: "90001"
+ *               destinationCity:
+ *                 type: string
+ *                 minLength: 2
+ *                 maxLength: 100
+ *                 description: City of the delivery location
+ *                 example: "Los Angeles"
+ *               weight:
+ *                 type: number
+ *                 minimum: 0.1
+ *                 maximum: 1000
+ *                 description: Package weight in kilograms
+ *                 example: 5.5
+ *               width:
+ *                 type: number
+ *                 minimum: 1
+ *                 maximum: 200
+ *                 description: Package width in centimeters
+ *                 example: 30
+ *               height:
+ *                 type: number
+ *                 minimum: 1
+ *                 maximum: 200
+ *                 description: Package height in centimeters
+ *                 example: 20
+ *               length:
+ *                 type: number
+ *                 minimum: 1
+ *                 maximum: 200
+ *                 description: Package length in centimeters
+ *                 example: 40
+ *               productType:
+ *                 type: string
+ *                 enum: [REGULAR, FRAGILE, HAZARDOUS]
+ *                 description: Type of product being shipped
+ *                 example: "REGULAR"
+ *               isFragile:
+ *                 type: boolean
+ *                 description: Indicates if special handling is required
+ *                 example: false
+ *               specialInstructions:
+ *                 type: string
+ *                 maxLength: 500
+ *                 description: Additional handling instructions
+ *                 example: "Please handle with care"
  *     responses:
  *       201:
  *         description: Shipment created successfully
@@ -174,13 +245,31 @@ const shipmentController = new ShipmentController(shipmentService);
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Error message describing validation failures
+ *                   example: "Invalid input data"
+ *                 errors:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       field:
+ *                         type: string
+ *                         description: Field that failed validation
+ *                         example: "weight"
+ *                       message:
+ *                         type: string
+ *                         description: Validation error message
+ *                         example: "Weight must be between 0.1 and 1000 kg"
  *       401:
  *         description: Unauthorized - Valid JWT token required
  *       500:
  *         description: Internal server error
  */
-shipmentRoutes.post('/', authenticate, shipmentController.createShipment);
+shipmentRoutes.post('/', authenticate, ValidateRequest(createShipmentSchema), shipmentController.createShipment);
 
 /**
  * @swagger
