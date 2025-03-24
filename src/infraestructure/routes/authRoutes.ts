@@ -8,7 +8,7 @@ import { loginSchema, registerSchema, verifyEmailSchema, forgotPasswordSchema, r
 import { EmailSenderFactory } from "../email/emailSenderFactory";
 import { EmailService } from "../../application/services/emailService";
 
-const router = Router();
+const authRoutes = Router();
 
 const authRepository = new PostgresAuthRepository(pool);
 const emailSender = EmailSenderFactory.create(process.env.EMAIL_TYPE as any || "nodemailer");
@@ -86,7 +86,7 @@ const authController = new AuthController(authService);
  *       500:
  *         description: Internal server error
  */
-router.post("/register", ValidateRequest(registerSchema), authController.registerUser);
+authRoutes.post("/register", ValidateRequest(registerSchema), authController.registerUser);
 
 /**
  * @swagger
@@ -140,7 +140,7 @@ router.post("/register", ValidateRequest(registerSchema), authController.registe
  *       500:
  *         description: Internal server error
  */
-router.post("/login", ValidateRequest(loginSchema), authController.loginUser);
+authRoutes.post("/login", ValidateRequest(loginSchema), authController.loginUser);
 
 /**
  * @swagger
@@ -177,7 +177,7 @@ router.post("/login", ValidateRequest(loginSchema), authController.loginUser);
  *       500:
  *         description: Internal server error
  */
-router.post("/forgot-password", ValidateRequest(forgotPasswordSchema), authController.forgotPassword);
+authRoutes.post("/forgot-password", ValidateRequest(forgotPasswordSchema), authController.forgotPassword);
 
 /**
  * @swagger
@@ -218,7 +218,7 @@ router.post("/forgot-password", ValidateRequest(forgotPasswordSchema), authContr
  *       500:
  *         description: Internal server error
  */
-router.post("/reset-password", ValidateRequest(resetPasswordSchema), authController.resetPassword);
+authRoutes.post("/reset-password", ValidateRequest(resetPasswordSchema), authController.resetPassword);
 
 /**
  * @swagger
@@ -250,7 +250,7 @@ router.post("/reset-password", ValidateRequest(resetPasswordSchema), authControl
  *       500:
  *         description: Internal server error
  */
-router.post("/confirm-email", ValidateRequest(verifyEmailSchema), authController.confirmEmail);
+authRoutes.post("/confirm-email", ValidateRequest(verifyEmailSchema), authController.confirmEmail);
 
 /**
  * @swagger
@@ -316,6 +316,6 @@ router.post("/confirm-email", ValidateRequest(verifyEmailSchema), authController
  *       500:
  *         description: Internal server error
  */
-router.post("/set-initial-password", ValidateRequest(setInitialPasswordSchema), authController.setInitialPassword);
+authRoutes.post("/set-initial-password", ValidateRequest(setInitialPasswordSchema), authController.setInitialPassword);
 
-export default router;
+export default authRoutes;
