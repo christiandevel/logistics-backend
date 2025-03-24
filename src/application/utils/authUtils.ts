@@ -15,7 +15,7 @@ export const generateToken = (user: AuthUser): string => {
   const expiresIn = process.env.JWT_EXPIRES_IN || "1h";
   
   return jwt.sign(
-    { id: user.getId(), email: user.getEmail() },
+    { id: user.getId(), role: user.getRole(), isVerified: user.isEmailVerified() },
     secret,
     { expiresIn }
   );
