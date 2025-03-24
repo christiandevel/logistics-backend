@@ -6,11 +6,15 @@ export class PostgresShipmentRepository implements ShipmentRepository {
 	
 	constructor(private readonly pool: Pool) {}
 	
-	async create(shipment: Shipment): Promise<Shipment> {
+	async create(shipment: Omit<Shipment, 'id' | 'driverId' | 'status' | 'createdAt' | 'updatedAt'>): Promise<Shipment> {
+		// Generate a unique tracking number
+		const trackingNumber = `SHIP${Date.now()}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
+		
 		const result = await this.pool.query(
-			'INSERT INTO shipments (user_id, driver_id, origin, destination, destination_zipcode, destination_city, weight, width, height, length, product_type, is_fragile, special_instructions, tracking_number, status, estimated_delivery_date) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING *',
-			[shipment.userId, shipment.driverId, shipment.origin, shipment.destination, shipment.destinationZipcode, shipment.destinationCity, shipment.weight, shipment.width, shipment.height, shipment.length, shipment.productType, shipment.isFragile, shipment.specialInstructions, shipment.trackingNumber, shipment.status, shipment.estimatedDeliveryDate]
+			`INSERT INTO shipments (user_id, origin, destination, destination_zipcode, destination_city, weight, width, height, length, product_type, is_fragile, special_instructions, tracking_number, status, estimated_delivery_date) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING *`,
+			[shipment.userId, shipment.origin, shipment.destination, shipment.destinationZipcode, shipment.destinationCity, shipment.weight, shipment.width, shipment.height, shipment.length, shipment.productType, shipment.isFragile, shipment.specialInstructions, trackingNumber, 'PENDING', shipment.estimatedDeliveryDate]
 		);
+		
 		return result.rows[0] as Shipment;
 	}
 	

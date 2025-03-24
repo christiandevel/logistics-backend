@@ -1,4 +1,6 @@
 import { Request, Response } from "express";
+import { v4 as uuidv4 } from 'uuid';
+
 import { ShipmentService } from "../../../application/services/shipmentService";
 
 export class ShipmentController {
@@ -6,10 +8,22 @@ export class ShipmentController {
 
 	createShipment = async (req: Request, res: Response): Promise<void> => {
 		try {
-			const shipment = await this.shipmentService.createShipment(req.body);
+			
+			const userId = req.user.id
+			const trakingNumber = `SHIP-${uuidv4().split('-')[0].toUpperCase()}`
+			
+			const estimatedDeliveryDate = new Date()
+			estimatedDeliveryDate.setDate(estimatedDeliveryDate.getDate() + 7)
+			
+			const shipment = await this.shipmentService.createShipment({
+				userId,
+				trakingNumber,
+				estimatedDeliveryDate,
+				...req.body
+			});
 			res.status(201).json(shipment);
 		} catch (error) {
-			res.status(500).json({ message: 'Error creating shipment', status: 'ERROR' });
+			res.status(500).json({ message: 'Error creating shipment', status: error });
 		}
 	}
 
