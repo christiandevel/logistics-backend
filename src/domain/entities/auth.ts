@@ -8,6 +8,8 @@ export interface UserProps {
 	role?: UserRole;
 	email_verified?: boolean;
 	requires_password_change?: boolean;
+	confirmation_token?: string;
+	confirmation_expires_at?: Date;
 }
 
 export class AuthUser {
@@ -18,6 +20,8 @@ export class AuthUser {
 	private role: UserRole;
 	private email_verified?: boolean;
 	private requires_password_change?: boolean;
+	private confirmation_token?: string;
+	private confirmation_expires_at?: Date;
 	
 	constructor(props: UserProps) {
 		this.id = props.id;
@@ -27,6 +31,8 @@ export class AuthUser {
 		this.role = props.role;
 		this.email_verified = props.email_verified;
 		this.requires_password_change = props.requires_password_change;
+		this.confirmation_token = props.confirmation_token;
+		this.confirmation_expires_at = props.confirmation_expires_at;
 	}
 	
 	getId(): string | undefined {
@@ -69,6 +75,10 @@ export class AuthUser {
 		this.requires_password_change = requiresPasswordChange;
 	}
 	
+	getConfirmationExpires(): Date | undefined {
+		return this.confirmation_expires_at;
+	}
+	
 	public toJSON(): UserProps {
 		return {
 			id: this.id,
@@ -78,6 +88,8 @@ export class AuthUser {
 			role: this.role,
 			email_verified: this.email_verified,
 			requires_password_change: this.requires_password_change,
+			confirmation_token: this.confirmation_token,
+			confirmation_expires_at: this.confirmation_expires_at,
 		};
 	}
 }

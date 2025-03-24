@@ -37,6 +37,7 @@ export class AuthController {
           id: result.user.getId(),
           email: result.user.getEmail(),
           role: result.user.getRole(),
+          isVerified: result.user.isEmailVerified(),
         },
         status: result.status,
         token: result.token,
@@ -64,8 +65,20 @@ export class AuthController {
     console.log("AuthController.changePassword()");
   }
 
-  async confirmEmail(): Promise<void> {
+  confirmEmail = async (req: Request, res: Response): Promise<void> => {
     console.log("AuthController.confirmEmail()");
+    try {
+      const { token } = req.body;
+      await this.authService.confirmEmail(token);
+      
+      res.status(200).json({ message: "Email confirmed successfully" });
+    } catch (error) {
+      if (error instanceof Error) {
+        res.status(400).json({ message: error.message });
+      } else {
+        res.status(500).json({ message: "Internal server error" });
+      }
+    }
   }
 
   async setInitialPassword(): Promise<void> {

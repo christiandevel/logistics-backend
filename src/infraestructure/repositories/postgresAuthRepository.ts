@@ -7,15 +7,15 @@ export class PostgresAuthRepository implements AuthRepository {
 	constructor(private readonly pool: Pool) {}
 	
 	async registerUser(user: AuthUser): Promise<AuthUser> {
-		const { email, password, full_name, role } = user.toJSON();
+		const { email, password, full_name, role, confirmation_token, confirmation_expires_at } = user.toJSON();
 		
 		const query = `
-			INSERT INTO users (email, password, full_name, role)
-			VALUES ($1, $2, $3, $4)
+			INSERT INTO users (email, password, full_name, role, confirmation_token, confirmation_expires_at)
+			VALUES ($1, $2, $3, $4, $5, $6)
 			RETURNING *;
 		`
 		
-		const result = await this.pool.query(query, [email, password, full_name, role]);
+		const result = await this.pool.query(query, [email, password, full_name, role, confirmation_token, confirmation_expires_at]);
 		const userData = this.mapRowToAuthUser(result.rows[0]);
 		return new AuthUser(userData);
 	}
@@ -54,6 +54,45 @@ export class PostgresAuthRepository implements AuthRepository {
 		console.log("PostgresAuthRepository.confirmEmail()");
 	}
 	
+	async findByConfirmationToken(token: string): Promise<AuthUser | null> {
+		const query = `
+			SELECT * FROM users WHERE confirmation_token = $1;
+		`
+		
+		const result = await this.pool.query(query, [token]);
+		if (result.rows.length === 0) {
+			return null;
+		}
+		
+		const userData = this.mapRowToAuthUser(result.rows[0]);
+		return new AuthUser(userData);
+	}
+	
+	async updateUser(user: AuthUser): Promise<void> {
+		const { email, password, full_name, role, confirmation_token, confirmation_expires_at } = user.toJSON();
+		
+		const query = `
+			UPDATE users
+			SET email = $1, 
+				password = $2, 
+				full_name = $3, 
+				role = $4, 
+				confirmation_token = $5, 
+				confirmation_expires_at = $6
+			WHERE id = $7;
+		`
+		
+		await this.pool.query(query, [
+			email, 
+			password, 
+			full_name, 
+			role, 
+			confirmation_token, 
+			confirmation_expires_at, 
+			user.getId()
+		]);
+	}
+	
 	async setInitialPassword(): Promise<void> {
 		console.log("PostgresAuthRepository.setInitialPassword()");
 	}
@@ -65,6 +104,10 @@ export class PostgresAuthRepository implements AuthRepository {
 			password: row.password,
 			full_name: row.full_name,
 			role: row.role,
+			email_verified: row.email_verified,
+			requires_password_change: row.requires_password_change,
+			confirmation_token: row.confirmation_token,
+			confirmation_expires_at: row.confirmation_expires_at,
 		}
 	}
 }

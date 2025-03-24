@@ -1,7 +1,9 @@
-import { AuthUser, UserProps } from "../../domain/entities/auth";
-import { AuthRepository } from "../../domain/ports/AuthRepository";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { v4 as uuidv4 } from "uuid";
+
+import { AuthUser, UserProps } from "../../domain/entities/auth";
+import { AuthRepository } from "../../domain/ports/AuthRepository";
 import { EmailService } from "./emailService";
 
 export type LoginResponse = {
@@ -11,6 +13,9 @@ export type LoginResponse = {
 }
 
 export class AuthService {
+	
+	private emailVerificationExpirationTime: number = 24 * 60 * 60 * 1000; // 1 day in milliseconds
+	
 	constructor(
 		private readonly authRepository: AuthRepository,
 		private readonly emailService: EmailService,
@@ -23,15 +28,21 @@ export class AuthService {
 		}
 		
 		const hashedPassword = await bcrypt.hash(userData.password, 10);
+		const confirmation_token = uuidv4();
+		const confirmation_expires_at = new Date(Date.now() + this.emailVerificationExpirationTime);
+		
 		const user = new AuthUser({
 			...userData,
 			password: hashedPassword,
+			confirmation_token,
+			confirmation_expires_at,
 		});
 		
+		console.log("Registering user...", user);
 		const createdUser = await this.authRepository.registerUser(user);
 		const token = this.generateToken(createdUser);
 		
-		await this.emailService.sendEmailConfirmationEmail(userData.email, token);
+		await this.emailService.sendEmailConfirmationEmail(userData.email, confirmation_token);
 		
 		return { user: createdUser, token };
 	}
@@ -71,8 +82,19 @@ export class AuthService {
 		console.log("AuthService.changePassword()");
 	}
 	
-	async confirmEmail(): Promise<void> {
-		console.log("AuthService.confirmEmail()");
+	async confirmEmail(token: string): Promise<void> {
+		const user = await this.authRepository.findByConfirmationToken(token);
+		if (!user) {
+			throw new Error("User not found");
+		}
+		
+		const confirmationExpirationTime = user.getConfirmationExpires();
+		if (!confirmationExpirationTime || new Date() > confirmationExpirationTime) {
+			throw new Error("Confirmation token expired");
+		}
+		
+		user.setEmailVerified(true);
+		await this.authRepository.updateUser(user);
 	}
 	
 	async setInitialPassword(): Promise<void> {
@@ -81,6 +103,7 @@ export class AuthService {
 	
 	private generateToken(user: AuthUser): string {
 		const secret = process.env.JWT_SECRET || "secret";
+		
 		const expiresIn = process.env.JWT_EXPIRES_IN || "1h";
 		
 		return jwt.sign(
