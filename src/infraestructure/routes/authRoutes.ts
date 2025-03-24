@@ -21,35 +21,68 @@ const authController = new AuthController(authService);
  * /api/auth/register:
  *   post:
  *     summary: Register a new user
- *     description: Register a new user
+ *     description: Register a new user with email verification
+ *     tags: [Auth]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *               - full_name
+ *               - role
  *             properties:
  *               email:
  *                 type: string
- *                 description: User email
+ *                 format: email
+ *                 description: User email address
  *               password:
  *                 type: string
- *                 description: User password
+ *                 minLength: 8
+ *                 description: User password (minimum 8 characters)
  *               full_name:
  *                 type: string
- *                 description: User full name
+ *                 description: User's full name
  *               role:
  *                 type: string
+ *                 enum: [admin, user, driver]
  *                 description: User role
- *                 enum:
- *                   - admin
- *                   - user
- *                   - driver
  *     responses:
  *       200:
- *         description: User created successfully
+ *         description: User registered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     full_name:
+ *                       type: string
+ *                     role:
+ *                       type: string
+ *                 token:
+ *                   type: string
  *       400:
- *         description: Bad request
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Email is required | Password must be at least 8 characters | Role must be one of the following: admin, user, driver"
+ *       409:
+ *         description: User already exists
  *       500:
  *         description: Internal server error
  */
@@ -60,25 +93,50 @@ router.post("/register", ValidateRequest(registerSchema), authController.registe
  * /api/auth/login:
  *   post:
  *     summary: Login a user
- *     description: Login a user
+ *     description: Authenticate a user and return a JWT token
+ *     tags: [Auth]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - email
+ *               - password
  *             properties:
  *               email:
  *                 type: string
- *                 description: User email
+ *                 format: email
+ *                 description: User email address
  *               password:
  *                 type: string
+ *                 minLength: 8
  *                 description: User password
  *     responses:
  *       200:
- *         description: User logged in successfully
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                 token:
+ *                   type: string
+ *                 status:
+ *                   type: string
+ *                   enum: [SUCCESS, REQUIRED_EMAIL_VERIFICATION, REQUIRED_PASSWORD_CHANGE]
  *       400:
- *         description: Bad request
+ *         description: Invalid credentials or validation error
+ *       404:
+ *         description: User not found
  *       500:
  *         description: Internal server error
  */
@@ -88,24 +146,34 @@ router.post("/login", ValidateRequest(loginSchema), authController.loginUser);
  * @swagger
  * /api/auth/forgot-password:
  *   post:
- *     summary: Forgot password
- *     description: Request a password reset link
+ *     summary: Request password reset
+ *     description: Send a password reset link to the user's email
+ *     tags: [Auth]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - email
  *             properties:
  *               email:
  *                 type: string
  *                 format: email
- *                 description: User email
+ *                 description: User email address
  *     responses:
  *       200:
  *         description: If the email exists, a reset link will be sent
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 userExists:
+ *                   type: boolean
  *       400:
- *         description: Bad request - Invalid email format
+ *         description: Invalid email format
  *       500:
  *         description: Internal server error
  */
@@ -117,6 +185,7 @@ router.post("/forgot-password", ValidateRequest(forgotPasswordSchema), authContr
  *   post:
  *     summary: Reset password
  *     description: Reset user password using a valid reset token
+ *     tags: [Auth]
  *     requestBody:
  *       required: true
  *       content:
@@ -131,57 +200,65 @@ router.post("/forgot-password", ValidateRequest(forgotPasswordSchema), authContr
  *               token:
  *                 type: string
  *                 format: uuid
- *                 description: Password reset token
+ *                 description: Password reset token (UUID v4)
  *               password:
  *                 type: string
  *                 minLength: 8
  *                 description: New password
  *               confirmPassword:
  *                 type: string
- *                 description: Confirm new password
+ *                 description: Confirm new password (must match password)
  *     responses:
  *       200:
  *         description: Password reset successfully
  *       400:
  *         description: Invalid token, expired token, or passwords don't match
+ *       404:
+ *         description: Token not found or expired
  *       500:
  *         description: Internal server error
  */
 router.post("/reset-password", ValidateRequest(resetPasswordSchema), authController.resetPassword);
 
-
 /**
  * @swagger
  * /api/auth/confirm-email:
  *   post:
- *     summary: Confirm email
- *     description: Confirm email
+ *     summary: Confirm email address
+ *     description: Verify user's email address using confirmation token
+ *     tags: [Auth]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - token
  *             properties:
  *               token:
  *                 type: string
- *                 description: Email confirmation token
+ *                 format: uuid
+ *                 description: Email confirmation token (UUID v4)
  *     responses:
  *       200:
  *         description: Email confirmed successfully
  *       400:
- *         description: Bad request
+ *         description: Invalid token format
+ *       404:
+ *         description: Token not found or expired
  *       500:
  *         description: Internal server error
  */
-router.post("/confirm-email", ValidateRequest(verifyEmailSchema),  authController.confirmEmail);
+router.post("/confirm-email", ValidateRequest(verifyEmailSchema), authController.confirmEmail);
 
 /**
  * @swagger
  * /api/auth/set-initial-password:
  *   post:
  *     summary: Set initial password for users that require password change
- *     description: Changes the password for users with requires_password_change flag
+ *     description: Changes the password for users with requires_password_change flag set to true
+ *     tags: [Auth]
  *     requestBody:
  *       required: true
  *       content:
@@ -203,10 +280,10 @@ router.post("/confirm-email", ValidateRequest(verifyEmailSchema),  authControlle
  *               newPassword:
  *                 type: string
  *                 minLength: 8
- *                 description: New password
+ *                 description: New password (minimum 8 characters)
  *               confirmPassword:
  *                 type: string
- *                 description: Confirm new password
+ *                 description: Confirm new password (must match newPassword)
  *     responses:
  *       200:
  *         description: Password set successfully
@@ -217,11 +294,12 @@ router.post("/confirm-email", ValidateRequest(verifyEmailSchema),  authControlle
  *               properties:
  *                 message:
  *                   type: string
+ *                   example: "Password updated successfully"
  *                 status:
  *                   type: string
  *                   enum: [SUCCESS]
  *       400:
- *         description: Invalid request or password change not required
+ *         description: Validation error or password change not required
  *         content:
  *           application/json:
  *             schema:
@@ -229,9 +307,12 @@ router.post("/confirm-email", ValidateRequest(verifyEmailSchema),  authControlle
  *               properties:
  *                 message:
  *                   type: string
+ *                   example: "Current password is incorrect | New password must be at least 8 characters | Passwords do not match"
  *                 status:
  *                   type: string
  *                   enum: [ERROR]
+ *       404:
+ *         description: User not found
  *       500:
  *         description: Internal server error
  */
