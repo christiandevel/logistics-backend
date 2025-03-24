@@ -76,7 +76,9 @@ const SQL_QUERIES = {
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       confirmation_token VARCHAR(255),
-      confirmation_expires_at TIMESTAMP
+      confirmation_expires_at TIMESTAMP,
+      reset_password_token VARCHAR(255),
+      reset_password_expires_at TIMESTAMP
 		)
 	`,
 
