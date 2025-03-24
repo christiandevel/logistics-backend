@@ -4,7 +4,7 @@ import pool from "../config/database";
 import { AuthService } from "../../application/services/authServices";
 import { AuthController } from "../server/controllers/authController";
 import { ValidateRequest } from "../validation/middleware/validationMiddleware";
-import { loginSchema, registerSchema, verifyEmailSchema, forgotPasswordSchema, resetPasswordSchema } from "../validation/schemas/authSchema";
+import { loginSchema, registerSchema, verifyEmailSchema, forgotPasswordSchema, resetPasswordSchema, setInitialPasswordSchema } from "../validation/schemas/authSchema";
 import { EmailSenderFactory } from "../email/emailSenderFactory";
 import { EmailService } from "../../application/services/emailService";
 
@@ -180,26 +180,61 @@ router.post("/confirm-email", ValidateRequest(verifyEmailSchema),  authControlle
  * @swagger
  * /api/auth/set-initial-password:
  *   post:
- *     summary: Set initial password
- *     description: Set initial password
+ *     summary: Set initial password for users that require password change
+ *     description: Changes the password for users with requires_password_change flag
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - userId
+ *               - currentPassword
+ *               - newPassword
+ *               - confirmPassword
  *             properties:
- *               password:
+ *               userId:
  *                 type: string
+ *                 description: User ID
+ *               currentPassword:
+ *                 type: string
+ *                 description: Current password
+ *               newPassword:
+ *                 type: string
+ *                 minLength: 8
  *                 description: New password
+ *               confirmPassword:
+ *                 type: string
+ *                 description: Confirm new password
  *     responses:
  *       200:
  *         description: Password set successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 status:
+ *                   type: string
+ *                   enum: [SUCCESS]
  *       400:
- *         description: Bad request
+ *         description: Invalid request or password change not required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 status:
+ *                   type: string
+ *                   enum: [ERROR]
  *       500:
  *         description: Internal server error
  */
-router.post("/set-initial-password", authController.setInitialPassword);
+router.post("/set-initial-password", ValidateRequest(setInitialPasswordSchema), authController.setInitialPassword);
 
 export default router;

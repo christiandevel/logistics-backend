@@ -57,3 +57,20 @@ export const resetPasswordSchema = Joi.object({
 		"any.only": "Passwords do not match",
 	}),
 });
+
+export const setInitialPasswordSchema = Joi.object({
+	userId: Joi.string().required().messages({
+		"any.required": "User ID is required",
+	}),
+	currentPassword: Joi.string().required().messages({
+		"any.required": "Current password is required",
+	}),
+	newPassword: Joi.string().required().min(8).messages({
+		"any.required": "New password is required",
+		"string.min": "New password must be at least 8 characters",
+	}),
+	confirmPassword: Joi.string().required().valid(Joi.ref('newPassword')).messages({
+		"any.required": "Password confirmation is required",
+		"any.only": "Passwords do not match",
+	}),
+});
