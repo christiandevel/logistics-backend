@@ -38,7 +38,6 @@ export class AuthService {
 			confirmation_expires_at,
 		});
 		
-		console.log("Registering user...", user);
 		const createdUser = await this.authRepository.registerUser(user);
 		const token = this.generateToken(createdUser);
 		
