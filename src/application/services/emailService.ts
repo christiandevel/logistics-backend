@@ -4,7 +4,7 @@ export class EmailService {
 	constructor(private readonly emailSender: EmailSenser) {}
 	
 	async sendPasswordResetEmail(to: string, token: string): Promise<void> {
-		const resetURL = `${process.env.API_URL}/reset-password?token=${token}`;
+		const resetURL = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
 		const html = `
 			<h1>Recuperación de contraseña</h1>
 			<p>Has solicitado restablecer tu contraseña. Para hacerlo, haz clic en el siguiente enlace para continuar:</p>
@@ -17,7 +17,7 @@ export class EmailService {
 	}
 	
 	async sendEmailConfirmationEmail(to: string, token: string): Promise<void> {
-		const confirmURL = `${process.env.API_URL}/confirm-email?token=${token}`;
+		const confirmURL = `${process.env.FRONTEND_URL}/confirm-email?token=${token}`;
 		const html = `
 			<h1>Confirmación de correo electrónico</h1>
 			<p>Para completar tu registro, haz clic en el siguiente enlace para continuar:</p>

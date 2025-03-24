@@ -2,9 +2,13 @@ import { AuthUser, UserProps } from "../../domain/entities/auth";
 import { AuthRepository } from "../../domain/ports/AuthRepository";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { EmailService } from "./emailService";
 
 export class AuthService {
-	constructor(private readonly authRepository: AuthRepository) {}
+	constructor(
+		private readonly authRepository: AuthRepository,
+		private readonly emailService: EmailService,
+	) {}
 	
 	async registerUser(userData: Omit<UserProps, 'id'>): Promise<{ user: AuthUser; token: string }> {
 		const existingUser = await this.authRepository.findByEmail(userData.email);
@@ -20,6 +24,8 @@ export class AuthService {
 		
 		const createdUser = await this.authRepository.registerUser(user);
 		const token = this.generateToken(createdUser);
+		
+		await this.emailService.sendEmailConfirmationEmail(userData.email, token);
 		
 		return { user: createdUser, token };
 	}

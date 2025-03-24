@@ -5,11 +5,15 @@ import { AuthService } from "../../application/services/authServices";
 import { AuthController } from "../server/controllers/authController";
 import { ValidateRequest } from "../validation/middleware/validationMiddleware";
 import { registerSchema } from "../validation/schemas/authSchema";
+import { EmailSenderFactory } from "../email/emailSenderFactory";
+import { EmailService } from "../../application/services/emailService";
 
 const router = Router();
 
 const authRepository = new PostgresAuthRepository(pool);
-const authService = new AuthService(authRepository);
+const emailSender = EmailSenderFactory.create(process.env.EMAIL_TYPE as any || "nodemailer");
+const emailService = new EmailService(emailSender);
+const authService = new AuthService(authRepository, emailService);
 const authController = new AuthController(authService);
 
 /**
