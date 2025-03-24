@@ -5,7 +5,7 @@ import pool from "../config/database";
 
 import { UserService } from "../../application/services/userService";
 import { UserController } from "../server/controllers/userController";
-import { ValidateRequest } from "../validation/middleware/validationMiddleware";
+import { verifyToken, isAdmin } from "../validation/middleware/authMiddleware";
 
 const userRoutes = Router();
 
@@ -48,15 +48,22 @@ const userController = new UserController(userService);
  *           type: string
  *           format: date-time
  *           description: When the user was last updated
+ *   securitySchemes:
+ *     BearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
  */
 
 /**
  * @swagger
  * /api/users:
  *   get:
- *     summary: Get all users
- *     description: Get all users from the database
+ *     summary: Get all users (Admin only)
+ *     description: Get all users from the database (Admin only)
  *     tags: [User]
+ *     security:
+ *       - BearerAuth: []
  *     responses:	
  *       200:
  *         description: Users retrieved successfully
@@ -66,18 +73,24 @@ const userController = new UserController(userService);
  *               type: array
  *               items:
  *                 $ref: '#/components/schemas/User'
+ *       401:
+ *         description: No token provided or invalid token
+ *       403:
+ *         description: Access denied. Admin role required
  *       500:
  *         description: Internal server error
  */
-userRoutes.get('/', userController.findAll);
+userRoutes.get('/', verifyToken, isAdmin, userController.findAll);
 
 /**
  * @swagger
  * /api/users/{role}:
  *   get:
- *     summary: Get users by role
- *     description: Get users by role from the database
+ *     summary: Get users by role (Admin only)
+ *     description: Get users by role from the database (Admin only)
  *     tags: [User]
+ *     security:
+ *       - BearerAuth: []
  *     parameters:
  *       - name: role
  *         in: path
@@ -100,9 +113,13 @@ userRoutes.get('/', userController.findAll);
  *                 $ref: '#/components/schemas/User'
  *       400:
  *         description: Invalid role
+ *       401:
+ *         description: No token provided or invalid token
+ *       403:
+ *         description: Access denied. Admin role required
  *       500:
  *         description: Internal server error
  */
-userRoutes.get('/:role', userController.findByRole);
+userRoutes.get('/:role', verifyToken, isAdmin, userController.findByRole);
 
 export default userRoutes;
