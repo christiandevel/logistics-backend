@@ -5,25 +5,21 @@ export class UserController {
 	constructor(private readonly userService: UserService) {}
 
 	findAll = async (req: Request, res: Response): Promise<void> => {
-		const users = await this.userService.findAll();
-		
-		if (users.length === 0) {
-			res.status(404).json({ message: "No users found" });
-			return;
+		try {
+			const users = await this.userService.findAll();
+			res.json(users);
+		} catch (error) {
+			res.status(500).json({ message: 'Error retrieving users', status: 'ERROR' });
 		}
-		
-		res.status(200).json(users);
 	}
 	
 	findByRole = async (req: Request, res: Response): Promise<void> => {
-		const role = req.params.role;
-		const users = await this.userService.findByRole(role);
-		
-		if (users.length === 0) {
-			res.status(404).json({ message: "No users found" });
-			return;
+		try {
+			const { role } = req.params;
+			const users = await this.userService.findByRole(role);
+			res.json(users);
+		} catch (error) {
+			res.status(500).json({ message: 'Error retrieving users', status: 'ERROR' });
 		}
-		
-		res.status(200).json(users);
 	}
 }

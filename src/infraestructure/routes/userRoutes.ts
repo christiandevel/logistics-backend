@@ -5,7 +5,8 @@ import pool from "../config/database";
 
 import { UserService } from "../../application/services/userService";
 import { UserController } from "../server/controllers/userController";
-import { verifyToken, isAdmin } from "../validation/middleware/authMiddleware";
+import { authenticate } from "../server/middleware/auth";
+import { checkRole } from "../server/middleware/checkRole";
 
 const userRoutes = Router();
 
@@ -80,7 +81,7 @@ const userController = new UserController(userService);
  *       500:
  *         description: Internal server error
  */
-userRoutes.get('/', verifyToken, isAdmin, userController.findAll);
+userRoutes.get('/', authenticate, checkRole(["admin"]), userController.findAll);
 
 /**
  * @swagger
@@ -120,6 +121,6 @@ userRoutes.get('/', verifyToken, isAdmin, userController.findAll);
  *       500:
  *         description: Internal server error
  */
-userRoutes.get('/:role', verifyToken, isAdmin, userController.findByRole);
+userRoutes.get('/:role', authenticate, checkRole(["admin"]), userController.findByRole);
 
 export default userRoutes;
