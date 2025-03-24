@@ -1,5 +1,4 @@
 import { Router } from "express";
-import { usersSchema } from "../validation/schemas/userSchema";
 
 import { PostgresUserRepository } from "../repositories/postgresUserRepository";
 import pool from "../config/database";
