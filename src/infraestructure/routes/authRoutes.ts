@@ -4,7 +4,7 @@ import pool from "../config/database";
 import { AuthService } from "../../application/services/authServices";
 import { AuthController } from "../server/controllers/authController";
 import { ValidateRequest } from "../validation/middleware/validationMiddleware";
-import { loginSchema, registerSchema, verifyEmailSchema, forgotPasswordSchema } from "../validation/schemas/authSchema";
+import { loginSchema, registerSchema, verifyEmailSchema, forgotPasswordSchema, resetPasswordSchema } from "../validation/schemas/authSchema";
 import { EmailSenderFactory } from "../email/emailSenderFactory";
 import { EmailService } from "../../application/services/emailService";
 
@@ -116,29 +116,38 @@ router.post("/forgot-password", ValidateRequest(forgotPasswordSchema), authContr
  * /api/auth/reset-password:
  *   post:
  *     summary: Reset password
- *     description: Reset password
+ *     description: Reset user password using a valid reset token
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - token
+ *               - password
+ *               - confirmPassword
  *             properties:
  *               token:
  *                 type: string
+ *                 format: uuid
  *                 description: Password reset token
  *               password:
  *                 type: string
+ *                 minLength: 8
  *                 description: New password
+ *               confirmPassword:
+ *                 type: string
+ *                 description: Confirm new password
  *     responses:
  *       200:
  *         description: Password reset successfully
  *       400:
- *         description: Bad request
+ *         description: Invalid token, expired token, or passwords don't match
  *       500:
  *         description: Internal server error
  */
-router.post("/reset-password", authController.resetPassword);
+router.post("/reset-password", ValidateRequest(resetPasswordSchema), authController.resetPassword);
 
 /**
  * @swagger

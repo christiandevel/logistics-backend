@@ -42,3 +42,18 @@ export const forgotPasswordSchema = Joi.object({
 		"string.email": "Email is not valid",
 	}),
 });
+
+export const resetPasswordSchema = Joi.object({
+	token: Joi.string().required().guid({ version: "uuidv4" }).messages({
+		"any.required": "Token is required",
+		"string.guid": "Token is not valid",
+	}),
+	password: Joi.string().required().min(8).messages({
+		"any.required": "Password is required",
+		"string.min": "Password must be at least 8 characters",
+	}),
+	confirmPassword: Joi.string().required().valid(Joi.ref('password')).messages({
+		"any.required": "Password confirmation is required",
+		"any.only": "Passwords do not match",
+	}),
+});
