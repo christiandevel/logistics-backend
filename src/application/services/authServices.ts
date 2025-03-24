@@ -9,7 +9,7 @@ import { EmailService } from "./emailService";
 export type LoginResponse = {
 	user: AuthUser;
 	token: string;
-	status: "SUCCESS" | "REQUIRED_EMAIL_VERIFICATION" | "INCORRECT_PASSWORD";
+	status: "SUCCESS" | "REQUIRED_EMAIL_VERIFICATION" | "REQUIRED_PASSWORD_CHANGE";
 }
 
 export class AuthService {
@@ -63,7 +63,7 @@ export class AuthService {
 		if (!user.isEmailVerified() && user.getRole() != 'driver') {
 			status = "REQUIRED_EMAIL_VERIFICATION";
 		} else if (user.requieresNewPassword()) {
-			status = "INCORRECT_PASSWORD";
+			status = "REQUIRED_PASSWORD_CHANGE";
 		}
 		
 		return { user, token, status };
@@ -113,8 +113,24 @@ export class AuthService {
 		await this.authRepository.updateUser(user);
 	}
 	
-	async setInitialPassword(): Promise<void> {
-		console.log("AuthService.setInitialPassword()");
+	async setInitialPassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
+		const user = await this.authRepository.findById(userId);
+		if (!user) {
+			throw new Error("User not found");
+		}
+
+		if (!user.getRequiresPasswordChange()) {
+			throw new Error("Password change not required for this user");
+		}
+
+		const isPasswordValid = await bcrypt.compare(currentPassword, user.getPassword());
+		if (!isPasswordValid) {
+			throw new Error("Current password is incorrect");
+		}
+
+		const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+		await this.authRepository.setInitialPassword(user.getId(), hashedPassword);
 	}
 	
 	private generateToken(user: AuthUser): string {

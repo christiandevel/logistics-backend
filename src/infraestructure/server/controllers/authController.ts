@@ -103,7 +103,29 @@ export class AuthController {
     }
   }
 
-  async setInitialPassword(): Promise<void> {
-    console.log("AuthController.setInitialPassword()");
+  setInitialPassword = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const { userId, currentPassword, newPassword } = req.body;
+        
+        await this.authService.setInitialPassword(userId, currentPassword, newPassword);
+        
+        res.status(200).json({ 
+            message: "Password has been set successfully",
+            status: "SUCCESS"
+        });
+    } catch (error) {
+        console.error('Set initial password error:', error);
+        if (error instanceof Error) {
+            res.status(400).json({ 
+                message: error.message,
+                status: "ERROR"
+            });
+        } else {
+            res.status(500).json({ 
+                message: "Internal server error",
+                status: "ERROR"
+            });
+        }
+    }
   }
 }
