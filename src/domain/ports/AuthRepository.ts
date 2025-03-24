@@ -1,5 +1,8 @@
+import { AuthUser } from "../entities/auth";
+
 export interface AuthRepository {	
-	registerUser(): Promise<void>;
+	registerUser(user: AuthUser): Promise<AuthUser>;
+	findByEmail(email: string): Promise<AuthUser | null>;
 	loginUser(): Promise<void>;
 	forgotPassword(): Promise<void>;
 	resetPassword(): Promise<void>;
