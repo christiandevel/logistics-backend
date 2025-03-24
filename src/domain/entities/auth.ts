@@ -68,6 +68,8 @@ export class AuthUser {
 			password: this.password,
 			full_name: this.full_name,
 			role: this.role,
+			email_verified: this.email_verified,
+			requires_password_change: this.requires_password_change,
 		};
 	}
 }
