@@ -77,7 +77,9 @@ export class AuthService {
 		}
 
 		const resetToken = uuidv4();
-		const resetExpires = new Date(Date.now() + 3600000); // 1 hour from now
+		const resetExpires = new Date();
+		resetExpires.setHours(resetExpires.getHours() + 1); // Suma 1 hora
+
 		
 		await this.authRepository.forgotPassword(email, resetToken, resetExpires);
 		await this.emailService.sendPasswordResetEmail(email, resetToken);
@@ -85,8 +87,15 @@ export class AuthService {
 		return { userExists: true };
 	}
 	
-	async resetPassword(): Promise<void> {
-		console.log("AuthService.resetPassword()");
+	async resetPassword(token: string, newPassword: string): Promise<void> {
+		const user = await this.authRepository.findByResetToken(token);
+		
+		if (!user) {
+			throw new Error("Invalid or expired reset token");
+		}
+
+		const hashedPassword = await bcrypt.hash(newPassword, 10);
+		await this.authRepository.resetPassword(user.getId(), hashedPassword);
 	}
 	
 	async changePassword(): Promise<void> {

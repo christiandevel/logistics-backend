@@ -39,18 +39,16 @@ export class PostgresAuthRepository implements AuthRepository {
 	}
 	
 	async forgotPassword(email: string, resetToken: string, resetExpires: Date): Promise<void> {
+
 		const query = `
 			UPDATE users
 			SET reset_password_token = $1,
-				reset_password_expires_at = $2
-			WHERE email = $3;
+				reset_password_expires_at = $2 AT TIME ZONE 'UTC'
+			WHERE email = $3
+			RETURNING id, email, reset_password_token, reset_password_expires_at;
 		`
 		
 		await this.pool.query(query, [resetToken, resetExpires, email]);
-	}
-	
-	async resetPassword(): Promise<void> {
-		console.log("PostgresAuthRepository.resetPassword()");
 	}
 	
 	async changePassword(): Promise<void> {
@@ -104,6 +102,61 @@ export class PostgresAuthRepository implements AuthRepository {
 	
 	async setInitialPassword(): Promise<void> {
 		console.log("PostgresAuthRepository.setInitialPassword()");
+	}
+	
+	async findByResetToken(token: string): Promise<AuthUser | null> {
+		// Primero verificamos el estado actual del token
+		const checkQuery = `
+			SELECT id, email, reset_password_token, reset_password_expires_at, 
+				   NOW() as current_time,
+				   CASE 
+					   WHEN reset_password_expires_at > NOW() THEN true 
+					   ELSE false 
+				   END as is_valid
+			FROM users 
+			WHERE reset_password_token = $1;
+		`;
+		const checkResult = await this.pool.query(checkQuery, [token]);
+		console.log('Token check:', {
+			found: checkResult.rows.length > 0,
+			tokenData: checkResult.rows[0],
+			currentTime: new Date().toISOString()
+		});
+
+		const query = `
+			SELECT * FROM users 
+			WHERE reset_password_token = $1 
+			AND reset_password_expires_at AT TIME ZONE 'UTC' > NOW() AT TIME ZONE 'UTC';
+		`
+		
+		const result = await this.pool.query(query, [token]);
+		console.log('Final query result:', {
+			found: result.rows.length > 0,
+			tokenValid: result.rows.length > 0 ? 'yes' : 'no',
+			query: query.replace(/\s+/g, ' ').trim()
+		});
+		
+		if (result.rows.length === 0) {
+			return null;
+		}
+		
+		const userData = this.mapRowToAuthUser(result.rows[0]);
+		return new AuthUser(userData);
+	}
+	
+	async resetPassword(userId: string, newPassword: string): Promise<void> {
+		const query = `
+			UPDATE users
+			SET password = $1,
+				reset_password_token = NULL,
+				reset_password_expires_at = NULL,
+				requires_password_change = false
+			WHERE id = $2
+			RETURNING *;
+		`
+		
+		const result = await this.pool.query(query, [newPassword, userId]);
+		console.log('Password reset complete for user:', result.rows[0]);
 	}
 	
 	private mapRowToAuthUser(row: any): UserProps {
