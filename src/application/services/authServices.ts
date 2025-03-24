@@ -69,8 +69,20 @@ export class AuthService {
 		return { user, token, status };
 	}
 	
-	async forgotPassword(): Promise<void> {
-		console.log("AuthService.forgotPassword()");
+	async forgotPassword(email: string): Promise<{ userExists: boolean }> {
+		const user = await this.authRepository.findByEmail(email);
+		
+		if (!user) {
+			return { userExists: false };
+		}
+
+		const resetToken = uuidv4();
+		const resetExpires = new Date(Date.now() + 3600000); // 1 hour from now
+		
+		await this.authRepository.forgotPassword(email, resetToken, resetExpires);
+		await this.emailService.sendPasswordResetEmail(email, resetToken);
+		
+		return { userExists: true };
 	}
 	
 	async resetPassword(): Promise<void> {
