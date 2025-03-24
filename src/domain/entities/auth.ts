@@ -1,9 +1,13 @@
+export type UserRole = "admin" | "user" | "driver";
+
 export interface UserProps {
 	id?: string;
 	email: string;
 	password: string;
 	full_name: string;
-	role: "admin" | "user" | "driver";
+	role?: UserRole;
+	email_verified?: boolean;
+	requires_password_change?: boolean;
 }
 
 export class AuthUser {
@@ -11,7 +15,9 @@ export class AuthUser {
 	private email: string;
 	private password: string;
 	private full_name: string;
-	private role: "admin" | "user" | "driver";
+	private role: UserRole;
+	private email_verified?: boolean;
+	private requires_password_change?: boolean;
 	
 	constructor(props: UserProps) {
 		this.id = props.id;
@@ -19,6 +25,8 @@ export class AuthUser {
 		this.password = props.password;
 		this.full_name = props.full_name;
 		this.role = props.role;
+		this.email_verified = props.email_verified;
+		this.requires_password_change = props.requires_password_change;
 	}
 	
 	getId(): string | undefined {
@@ -43,6 +51,14 @@ export class AuthUser {
 	
 	setPassword(password: string): void {
 		this.password = password;
+	}
+	
+	setEmailVerified(emailVerified: boolean): void {
+		this.email_verified = emailVerified;
+	}
+	
+	setRequiresPasswordChange(requiresPasswordChange: boolean): void {
+		this.requires_password_change = requiresPasswordChange;
 	}
 	
 	public toJSON(): UserProps {
