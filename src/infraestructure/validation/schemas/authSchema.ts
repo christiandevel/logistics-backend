@@ -35,3 +35,10 @@ export const verifyEmailSchema = Joi.object({
 		"string.guid": "Token is not valid",
 	}),
 })
+
+export const forgotPasswordSchema = Joi.object({
+	email: Joi.string().email().required().messages({
+		"any.required": "Email is required",
+		"string.email": "Email is not valid",
+	}),
+});

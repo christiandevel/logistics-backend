@@ -4,7 +4,7 @@ import pool from "../config/database";
 import { AuthService } from "../../application/services/authServices";
 import { AuthController } from "../server/controllers/authController";
 import { ValidateRequest } from "../validation/middleware/validationMiddleware";
-import { loginSchema, registerSchema, verifyEmailSchema, } from "../validation/schemas/authSchema";
+import { loginSchema, registerSchema, verifyEmailSchema, forgotPasswordSchema } from "../validation/schemas/authSchema";
 import { EmailSenderFactory } from "../email/emailSenderFactory";
 import { EmailService } from "../../application/services/emailService";
 
@@ -89,7 +89,7 @@ router.post("/login", ValidateRequest(loginSchema), authController.loginUser);
  * /api/auth/forgot-password:
  *   post:
  *     summary: Forgot password
- *     description: Forgot password
+ *     description: Request a password reset link
  *     requestBody:
  *       required: true
  *       content:
@@ -99,16 +99,17 @@ router.post("/login", ValidateRequest(loginSchema), authController.loginUser);
  *             properties:
  *               email:
  *                 type: string
+ *                 format: email
  *                 description: User email
  *     responses:
  *       200:
- *         description: Password forgotten successfully
+ *         description: If the email exists, a reset link will be sent
  *       400:
- *         description: Bad request
+ *         description: Bad request - Invalid email format
  *       500:
  *         description: Internal server error
  */
-router.post("/forgot-password", authController.forgotPassword);
+router.post("/forgot-password", ValidateRequest(forgotPasswordSchema), authController.forgotPassword);
 
 /**
  * @swagger
