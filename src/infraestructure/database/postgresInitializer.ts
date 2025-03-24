@@ -21,6 +21,8 @@ export class PostgresDatabaseInitializer implements IDatabaseInitializer {
       await this.pool.query(SQL_QUERIES.CREATE_HISTORY_SHIPMENTS_TABLE);
       await this.pool.query(SQL_QUERIES.CREATE_UPDATE_TIMESTAMP_FUNCTION);
       await this.pool.query(SQL_QUERIES.CREATE_USER_UPDATE_TRIGGER);
+      await this.pool.query(SQL_QUERIES.CREATE_SHIPMENT_HISTORY_FUNCTION);
+      await this.pool.query(SQL_QUERIES.CREATE_SHIPMENT_HISTORY_TRIGGER);
       await this.pool.query(SQL_QUERIES.CREATE_INDICES);
 
       const users = INITAL_DATA;
@@ -89,7 +91,7 @@ const SQL_QUERIES = {
     CREATE TABLE IF NOT EXISTS shipments (
       id SERIAL PRIMARY KEY,
       user_id INTEGER NOT NULL REFERENCES users(id),
-      driver_id INTEGER NOT NULL REFERENCES users(id),
+      driver_id INTEGER REFERENCES users(id),
       origin VARCHAR(255) NOT NULL,
       destination VARCHAR(255) NOT NULL,
       destination_zipcode VARCHAR(255) NOT NULL,
@@ -100,7 +102,7 @@ const SQL_QUERIES = {
       length VARCHAR(255) NOT NULL,
       product_type VARCHAR(255) NOT NULL,
       is_fragile BOOLEAN NOT NULL DEFAULT false,
-      special_instructions VARCHAR(255) NOT NULL,
+      special_instructions VARCHAR(255),
       tracking_number VARCHAR(255) NOT NULL,
       status VARCHAR(255) NOT NULL DEFAULT 'pending',
       estimated_delivery_date DATE,
@@ -115,6 +117,7 @@ const SQL_QUERIES = {
       id SERIAL PRIMARY KEY,
       shipment_id INTEGER NOT NULL REFERENCES shipments(id),
       user_id INTEGER NOT NULL REFERENCES users(id),
+      status VARCHAR(255) NOT NULL,
       notes TEXT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
@@ -189,6 +192,44 @@ const SQL_QUERIES = {
       WHERE table_schema = 'public'
       AND table_name = 'users'
     );
+  `,
+
+  CREATE_SHIPMENT_HISTORY_FUNCTION: `
+    CREATE OR REPLACE FUNCTION record_shipment_history()
+    RETURNS TRIGGER AS $$
+    BEGIN
+      IF TG_OP = 'INSERT' THEN
+        INSERT INTO history_shipments (shipment_id, user_id, status, notes)
+        VALUES (NEW.id, NEW.user_id, NEW.status, 'Shipment created');
+      ELSIF TG_OP = 'UPDATE' THEN
+        IF OLD.status != NEW.status THEN
+          INSERT INTO history_shipments (shipment_id, user_id, status, notes)
+          VALUES (NEW.id, NEW.user_id, NEW.status, 'Status changed from ' || OLD.status || ' to ' || NEW.status);
+        END IF;
+        IF OLD.driver_id IS DISTINCT FROM NEW.driver_id THEN
+          INSERT INTO history_shipments (shipment_id, user_id, status, notes)
+          VALUES (NEW.id, NEW.user_id, NEW.status, 'Driver assigned');
+        END IF;
+      END IF;
+      RETURN NEW;
+    END;
+    $$ LANGUAGE plpgsql;
+  `,
+
+  CREATE_SHIPMENT_HISTORY_TRIGGER: `
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM pg_trigger 
+        WHERE tgname = 'shipment_history_trigger'
+      ) THEN
+        CREATE TRIGGER shipment_history_trigger
+        AFTER INSERT OR UPDATE ON shipments
+        FOR EACH ROW
+        EXECUTE PROCEDURE record_shipment_history();
+      END IF;
+    END;
+    $$;
   `,
 };
 
