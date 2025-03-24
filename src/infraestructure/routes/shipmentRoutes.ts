@@ -1,7 +1,7 @@
 import { Router } from "express";
 import pool from "../config/database";
 import { PostgresShipmentRepository } from "../repositories/postgresShipmentRepository";
-import { ShipmentService } from "@/application/services/shipmentService";
+import { ShipmentService } from "../../application/services/shipmentService";
 import { ShipmentController } from "../server/controllers/shipmentController";
 
 const shipmentRoutes = Router();

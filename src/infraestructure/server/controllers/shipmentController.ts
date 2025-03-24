@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { ShipmentService } from "@/application/services/shipmentService";
+import { ShipmentService } from "../../application/services/shipmentService";
 
 export class ShipmentController {
 	constructor(private readonly shipmentService: ShipmentService) { }
