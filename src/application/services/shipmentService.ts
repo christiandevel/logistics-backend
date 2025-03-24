@@ -4,7 +4,7 @@ import { ShipmentRepository } from "@/domain/ports/ShipmentRepository";
 export class ShipmentService {
 	constructor(private readonly shipmentRepository: ShipmentRepository) {}
 	
-	async createShipment(shipment: Shipment): Promise<Shipment> {
+	async createShipment(shipment: Omit<Shipment, 'id' | 'driverId' | 'status' | 'createdAt' | 'updatedAt'>): Promise<Shipment> {
 		return this.shipmentRepository.create(shipment);
 	}
 	
