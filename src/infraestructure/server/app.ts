@@ -17,7 +17,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
 	explorer: true,
 	customCss: ".topbar { display: none }",
 	customSiteTitle: "API Logistics",
-	customfavIcon: '/favicon.ico'
+	customfavIcon: './assets/cropped-favicon.png'
 }));
 
 // routes
