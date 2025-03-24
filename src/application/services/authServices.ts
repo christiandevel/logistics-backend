@@ -98,10 +98,6 @@ export class AuthService {
 		await this.authRepository.resetPassword(user.getId(), hashedPassword);
 	}
 	
-	async changePassword(): Promise<void> {
-		console.log("AuthService.changePassword()");
-	}
-	
 	async confirmEmail(token: string): Promise<void> {
 		const user = await this.authRepository.findByConfirmationToken(token);
 		if (!user) {

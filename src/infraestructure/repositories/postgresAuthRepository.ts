@@ -51,9 +51,6 @@ export class PostgresAuthRepository implements AuthRepository {
 		await this.pool.query(query, [resetToken, resetExpires, email]);
 	}
 	
-	async changePassword(): Promise<void> {
-		console.log("PostgresAuthRepository.changePassword()");
-	}
 	
 	async confirmEmail(): Promise<void> {
 		console.log("PostgresAuthRepository.confirmEmail()");

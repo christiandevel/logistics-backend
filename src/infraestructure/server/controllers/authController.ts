@@ -86,10 +86,6 @@ export class AuthController {
     }
   }
 
-  async changePassword(): Promise<void> {
-    console.log("AuthController.changePassword()");
-  }
-
   confirmEmail = async (req: Request, res: Response): Promise<void> => {
     console.log("AuthController.confirmEmail()");
     try {

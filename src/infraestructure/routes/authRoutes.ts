@@ -149,34 +149,6 @@ router.post("/forgot-password", ValidateRequest(forgotPasswordSchema), authContr
  */
 router.post("/reset-password", ValidateRequest(resetPasswordSchema), authController.resetPassword);
 
-/**
- * @swagger
- * /api/auth/change-password:
- *   post:
- *     summary: Change password
- *     description: Change password
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               token:
- *                 type: string
- *                 description: Password reset token
- *               password:
- *                 type: string
- *                 description: New password
- *     responses:
- *       200:
- *         description: Password changed successfully
- *       400:
- *         description: Bad request
- *       500:
- *         description: Internal server error
- */
-router.post("/change-password", authController.changePassword);
 
 /**
  * @swagger
