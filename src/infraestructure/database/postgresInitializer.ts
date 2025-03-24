@@ -154,10 +154,19 @@ const SQL_QUERIES = {
   `,
 
   CREATE_USER_UPDATE_TRIGGER: `
-    CREATE TRIGGER user_update_trigger
-    BEFORE UPDATE ON users
-    FOR EACH ROW
-    EXECUTE PROCEDURE update_timestamp_column();
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM pg_trigger 
+        WHERE tgname = 'user_update_trigger'
+      ) THEN
+        CREATE TRIGGER user_update_trigger
+        BEFORE UPDATE ON users
+        FOR EACH ROW
+        EXECUTE PROCEDURE update_timestamp_column();
+      END IF;
+    END;
+    $$;
   `,
 
   CHECK_USER_EXISTS: `
