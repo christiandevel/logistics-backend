@@ -10,6 +10,8 @@ export interface UserProps {
 	requires_password_change?: boolean;
 	confirmation_token?: string;
 	confirmation_expires_at?: Date;
+	reset_password_token?: string;
+	reset_password_expires_at?: Date;
 }
 
 export class AuthUser {
@@ -22,6 +24,8 @@ export class AuthUser {
 	private requires_password_change?: boolean;
 	private confirmation_token?: string;
 	private confirmation_expires_at?: Date;
+	private reset_password_token?: string;
+	private reset_password_expires_at?: Date;
 	
 	constructor(props: UserProps) {
 		this.id = props.id;
@@ -33,6 +37,8 @@ export class AuthUser {
 		this.requires_password_change = props.requires_password_change;
 		this.confirmation_token = props.confirmation_token;
 		this.confirmation_expires_at = props.confirmation_expires_at;
+		this.reset_password_token = props.reset_password_token;
+		this.reset_password_expires_at = props.reset_password_expires_at;
 	}
 	
 	getId(): string | undefined {
@@ -94,6 +100,8 @@ export class AuthUser {
 			requires_password_change: this.requires_password_change,
 			confirmation_token: this.confirmation_token,
 			confirmation_expires_at: this.confirmation_expires_at,
+			reset_password_token: this.reset_password_token,
+			reset_password_expires_at: this.reset_password_expires_at,
 		};
 	}
 }
