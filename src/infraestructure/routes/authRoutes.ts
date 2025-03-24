@@ -4,7 +4,7 @@ import pool from "../config/database";
 import { AuthService } from "../../application/services/authServices";
 import { AuthController } from "../server/controllers/authController";
 import { ValidateRequest } from "../validation/middleware/validationMiddleware";
-import { registerSchema } from "../validation/schemas/authSchema";
+import { loginSchema, registerSchema } from "../validation/schemas/authSchema";
 import { EmailSenderFactory } from "../email/emailSenderFactory";
 import { EmailService } from "../../application/services/emailService";
 
@@ -82,7 +82,7 @@ router.post("/register", ValidateRequest(registerSchema), authController.registe
  *       500:
  *         description: Internal server error
  */
-router.post("/login", authController.loginUser);
+router.post("/login", ValidateRequest(loginSchema), authController.loginUser);
 
 /**
  * @swagger

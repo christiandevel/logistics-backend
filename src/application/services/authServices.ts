@@ -4,6 +4,12 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { EmailService } from "./emailService";
 
+export type LoginResponse = {
+	user: AuthUser;
+	token: string;
+	status: "SUCCESS" | "REQUIRED_EMAIL_VERIFICATION" | "INCORRECT_PASSWORD";
+}
+
 export class AuthService {
 	constructor(
 		private readonly authRepository: AuthRepository,
@@ -30,8 +36,27 @@ export class AuthService {
 		return { user: createdUser, token };
 	}
 	
-	async loginUser(): Promise<void> {
-		console.log("AuthService.loginUser()");
+	async loginUser(email: string, password: string): Promise<LoginResponse> {
+		const user = await this.authRepository.findByEmail(email);
+		if (!user) {
+			throw new Error("User not found");
+		}
+		
+		const isPasswordCorrect = await bcrypt.compare(password, user.getPassword());
+		if (!isPasswordCorrect) {
+			throw new Error("Incorrect password");
+		}
+		
+		const token = this.generateToken(user);
+		let status: LoginResponse["status"] = "SUCCESS";
+		
+		if (!user.isEmailVerified() && user.getRole() != 'driver') {
+			status = "REQUIRED_EMAIL_VERIFICATION";
+		} else if (!user.getRequiresPasswordChange()) {
+			status = "INCORRECT_PASSWORD";
+		}
+		
+		return { user, token, status };
 	}
 	
 	async forgotPassword(): Promise<void> {

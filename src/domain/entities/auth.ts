@@ -53,8 +53,16 @@ export class AuthUser {
 		this.password = password;
 	}
 	
+	isEmailVerified(): boolean {
+		return this.email_verified;
+	}
+	
 	setEmailVerified(emailVerified: boolean): void {
 		this.email_verified = emailVerified;
+	}
+	
+	getRequiresPasswordChange(): boolean {
+		return this.requires_password_change;
 	}
 	
 	setRequiresPasswordChange(requiresPasswordChange: boolean): void {
