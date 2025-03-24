@@ -69,7 +69,7 @@ export class PostgresAuthRepository implements AuthRepository {
 	}
 	
 	async updateUser(user: AuthUser): Promise<void> {
-		const { email, password, full_name, role, confirmation_token, confirmation_expires_at } = user.toJSON();
+		const { email, password, full_name, role, confirmation_token, confirmation_expires_at, email_verified } = user.toJSON();
 		
 		const query = `
 			UPDATE users
@@ -78,8 +78,9 @@ export class PostgresAuthRepository implements AuthRepository {
 				full_name = $3, 
 				role = $4, 
 				confirmation_token = $5, 
-				confirmation_expires_at = $6
-			WHERE id = $7;
+				confirmation_expires_at = $6,
+				email_verified = $7
+			WHERE id = $8;
 		`
 		
 		await this.pool.query(query, [
@@ -88,7 +89,8 @@ export class PostgresAuthRepository implements AuthRepository {
 			full_name, 
 			role, 
 			confirmation_token, 
-			confirmation_expires_at, 
+			confirmation_expires_at,
+			email_verified,
 			user.getId()
 		]);
 	}
