@@ -62,7 +62,7 @@ export class AuthService {
 		
 		if (!user.isEmailVerified() && user.getRole() != 'driver') {
 			status = "REQUIRED_EMAIL_VERIFICATION";
-		} else if (!user.getRequiresPasswordChange()) {
+		} else if (user.requieresNewPassword()) {
 			status = "INCORRECT_PASSWORD";
 		}
 		

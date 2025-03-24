@@ -63,6 +63,10 @@ export class AuthUser {
 		return this.email_verified;
 	}
 	
+	requieresNewPassword(): boolean {
+		return this.requires_password_change;
+	}
+	
 	setEmailVerified(emailVerified: boolean): void {
 		this.email_verified = emailVerified;
 	}
