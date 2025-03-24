@@ -1,5 +1,6 @@
 import express from "express";
 import swaggerUi from "swagger-ui-express";
+import cors from "cors";
 
 // Swagger config	
 import { swaggerSpec } from "../config/swagger";
@@ -11,6 +12,16 @@ import shipmentRoutes from "../routes/shipmentRoutes";
 
 const app = express();
 
+// CORS configuration
+const corsOptions = {
+	origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:5173'],
+	methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+	allowedHeaders: ['Content-Type', 'Authorization'],
+	credentials: true,
+	maxAge: 86400 // 24 hours
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
@@ -26,8 +37,8 @@ app.use('/api/users', userRoutes);
 app.use('/api/shipments', shipmentRoutes);
 
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error(err);
-  res.status(500).send("Internal Server Error");
+	console.error(err);
+	res.status(500).send("Internal Server Error");
 });
 
 export default app;
