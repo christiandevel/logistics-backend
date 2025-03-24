@@ -74,7 +74,9 @@ const SQL_QUERIES = {
 			email_verified BOOLEAN NOT NULL DEFAULT false,
 			requires_password_change BOOLEAN NOT NULL DEFAULT false,
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      confirmation_token VARCHAR(255),
+      confirmation_expires_at TIMESTAMP
 		)
 	`,
 
