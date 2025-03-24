@@ -68,8 +68,22 @@ export class AuthController {
     }
   }
 
-  async resetPassword(): Promise<void> {
-    console.log("AuthController.resetPassword()");
+  resetPassword = async (req: Request, res: Response): Promise<void> => {
+    try {
+      
+      const { token, password } = req.body;
+      await this.authService.resetPassword(token, password);
+      
+      res.status(200).json({ 
+        message: "Password has been reset successfully" 
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        res.status(400).json({ message: error.message });
+      } else {
+        res.status(500).json({ message: "Internal server error" });
+      }
+    }
   }
 
   async changePassword(): Promise<void> {
