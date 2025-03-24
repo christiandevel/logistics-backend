@@ -5,7 +5,7 @@ export interface AuthRepository {
 	findByEmail(email: string): Promise<AuthUser | null>;
 	updateUser(user: AuthUser): Promise<void>;
 	loginUser(): Promise<void>;
-	forgotPassword(): Promise<void>;
+	forgotPassword(email: string, resetToken: string, resetExpires: Date): Promise<void>;
 	resetPassword(): Promise<void>;
 	changePassword(): Promise<void>;
 	confirmEmail(): Promise<void>;

@@ -53,8 +53,19 @@ export class AuthController {
     }
   }
 
-  async forgotPassword(): Promise<void> {
-    console.log("AuthController.forgotPassword()");
+  forgotPassword = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { email } = req.body;
+      await this.authService.forgotPassword(email);
+      
+      res.status(200).json({ message: "Password reset instructions have been sent" });
+    } catch (error) {
+      if (error instanceof Error) {
+        res.status(400).json({ message: error.message });
+      } else {
+        res.status(500).json({ message: "Internal server error" });
+      }
+    }
   }
 
   async resetPassword(): Promise<void> {
@@ -69,6 +80,7 @@ export class AuthController {
     console.log("AuthController.confirmEmail()");
     try {
       const { token } = req.body;
+      console.log(token);
       await this.authService.confirmEmail(token);
       
       res.status(200).json({ message: "Email confirmed successfully" });
