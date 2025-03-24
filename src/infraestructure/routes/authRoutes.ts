@@ -4,7 +4,7 @@ import pool from "../config/database";
 import { AuthService } from "../../application/services/authServices";
 import { AuthController } from "../server/controllers/authController";
 import { ValidateRequest } from "../validation/middleware/validationMiddleware";
-import { loginSchema, registerSchema } from "../validation/schemas/authSchema";
+import { loginSchema, registerSchema, verifyEmailSchema, } from "../validation/schemas/authSchema";
 import { EmailSenderFactory } from "../email/emailSenderFactory";
 import { EmailService } from "../../application/services/emailService";
 
@@ -192,7 +192,7 @@ router.post("/change-password", authController.changePassword);
  *       500:
  *         description: Internal server error
  */
-router.post("/confirm-email", authController.confirmEmail);
+router.post("/confirm-email", ValidateRequest(verifyEmailSchema),  authController.confirmEmail);
 
 /**
  * @swagger
