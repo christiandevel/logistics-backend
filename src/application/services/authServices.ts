@@ -1,10 +1,8 @@
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
-
 import { AuthUser, UserProps } from "../../domain/entities/auth";
 import { AuthRepository } from "../../domain/ports/AuthRepository";
 import { EmailService } from "./emailService";
+import { comparePasswords, generateToken, hashPassword, TOKEN_EXPIRATION } from "../utils/authUtils";
 
 export type LoginResponse = {
 	user: AuthUser;
@@ -13,9 +11,6 @@ export type LoginResponse = {
 }
 
 export class AuthService {
-	
-	private emailVerificationExpirationTime: number = 24 * 60 * 60 * 1000; // 1 day in milliseconds
-	
 	constructor(
 		private readonly authRepository: AuthRepository,
 		private readonly emailService: EmailService,
@@ -27,9 +22,9 @@ export class AuthService {
 			throw new Error("User already exists");
 		}
 		
-		const hashedPassword = await bcrypt.hash(userData.password, 10);
+		const hashedPassword = await hashPassword(userData.password);
 		const confirmation_token = uuidv4();
-		const confirmation_expires_at = new Date(Date.now() + this.emailVerificationExpirationTime);
+		const confirmation_expires_at = new Date(Date.now() + TOKEN_EXPIRATION.EMAIL_VERIFICATION);
 		
 		const user = new AuthUser({
 			...userData,
@@ -39,7 +34,7 @@ export class AuthService {
 		});
 		
 		const createdUser = await this.authRepository.registerUser(user);
-		const token = this.generateToken(createdUser);
+		const token = generateToken(createdUser);
 		
 		await this.emailService.sendEmailConfirmationEmail(userData.email, confirmation_token);
 		
@@ -52,15 +47,15 @@ export class AuthService {
 			throw new Error("User not found");
 		}
 		
-		const isPasswordCorrect = await bcrypt.compare(password, user.getPassword());
+		const isPasswordCorrect = await comparePasswords(password, user.getPassword());
 		if (!isPasswordCorrect) {
 			throw new Error("Incorrect password");
 		}
 		
-		const token = this.generateToken(user);
+		const token = generateToken(user);
 		let status: LoginResponse["status"] = "SUCCESS";
 		
-		if (!user.isEmailVerified() && user.getRole() != 'driver') {
+		if (!user.isEmailVerified() && user.getRole() !== 'driver') {
 			status = "REQUIRED_EMAIL_VERIFICATION";
 		} else if (user.requieresNewPassword()) {
 			status = "REQUIRED_PASSWORD_CHANGE";
@@ -77,9 +72,7 @@ export class AuthService {
 		}
 
 		const resetToken = uuidv4();
-		const resetExpires = new Date();
-		resetExpires.setHours(resetExpires.getHours() + 1); // Suma 1 hora
-
+		const resetExpires = new Date(Date.now() + TOKEN_EXPIRATION.PASSWORD_RESET);
 		
 		await this.authRepository.forgotPassword(email, resetToken, resetExpires);
 		await this.emailService.sendPasswordResetEmail(email, resetToken);
@@ -94,14 +87,14 @@ export class AuthService {
 			throw new Error("Invalid or expired reset token");
 		}
 
-		const hashedPassword = await bcrypt.hash(newPassword, 10);
+		const hashedPassword = await hashPassword(newPassword);
 		await this.authRepository.resetPassword(user.getId(), hashedPassword);
 	}
 	
 	async confirmEmail(token: string): Promise<void> {
 		const user = await this.authRepository.findByConfirmationToken(token);
 		if (!user) {
-			throw new Error("User not found");
+			throw new Error("Invalid confirmation token");
 		}
 		
 		const confirmationExpirationTime = user.getConfirmationExpires();
@@ -123,27 +116,12 @@ export class AuthService {
 			throw new Error("Password change not required for this user");
 		}
 
-		const isPasswordValid = await bcrypt.compare(currentPassword, user.getPassword());
+		const isPasswordValid = await comparePasswords(currentPassword, user.getPassword());
 		if (!isPasswordValid) {
 			throw new Error("Current password is incorrect");
 		}
 
-		const hashedPassword = await bcrypt.hash(newPassword, 10);
-
+		const hashedPassword = await hashPassword(newPassword);
 		await this.authRepository.setInitialPassword(user.getId(), hashedPassword);
-	}
-	
-	private generateToken(user: AuthUser): string {
-		const secret = process.env.JWT_SECRET || "secret";
-		
-		const expiresIn = process.env.JWT_EXPIRES_IN || "1h";
-		
-		return jwt.sign(
-			{ id: user.getId(), email: user.getEmail() },
-			secret,
-			{
-				expiresIn,
-			}
-		);
 	}
 }

@@ -11,7 +11,7 @@ export class AuthController {
 
       res.status(201).json({
         message: "User created successfully",
-				token: result.token,
+        token: result.token,
         user: {
           id: result.user.getId(),
           email: result.user.getEmail(),
@@ -56,9 +56,12 @@ export class AuthController {
   forgotPassword = async (req: Request, res: Response): Promise<void> => {
     try {
       const { email } = req.body;
-      await this.authService.forgotPassword(email);
+      const result = await this.authService.forgotPassword(email);
       
-      res.status(200).json({ message: "Password reset instructions have been sent" });
+      res.status(200).json({ 
+        message: "If the email exists, password reset instructions have been sent",
+        userExists: result.userExists
+      });
     } catch (error) {
       if (error instanceof Error) {
         res.status(400).json({ message: error.message });
@@ -70,62 +73,73 @@ export class AuthController {
 
   resetPassword = async (req: Request, res: Response): Promise<void> => {
     try {
-      
       const { token, password } = req.body;
       await this.authService.resetPassword(token, password);
       
       res.status(200).json({ 
-        message: "Password has been reset successfully" 
+        message: "Password has been reset successfully",
+        status: "SUCCESS"
       });
     } catch (error) {
       if (error instanceof Error) {
-        res.status(400).json({ message: error.message });
+        res.status(400).json({ 
+          message: error.message,
+          status: "ERROR"
+        });
       } else {
-        res.status(500).json({ message: "Internal server error" });
+        res.status(500).json({ 
+          message: "Internal server error",
+          status: "ERROR"
+        });
       }
     }
   }
 
   confirmEmail = async (req: Request, res: Response): Promise<void> => {
-    console.log("AuthController.confirmEmail()");
     try {
       const { token } = req.body;
-      console.log(token);
       await this.authService.confirmEmail(token);
       
-      res.status(200).json({ message: "Email confirmed successfully" });
+      res.status(200).json({ 
+        message: "Email confirmed successfully",
+        status: "SUCCESS"
+      });
     } catch (error) {
       if (error instanceof Error) {
-        res.status(400).json({ message: error.message });
+        res.status(400).json({ 
+          message: error.message,
+          status: "ERROR"
+        });
       } else {
-        res.status(500).json({ message: "Internal server error" });
+        res.status(500).json({ 
+          message: "Internal server error",
+          status: "ERROR"
+        });
       }
     }
   }
 
   setInitialPassword = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { userId, currentPassword, newPassword } = req.body;
-        
-        await this.authService.setInitialPassword(userId, currentPassword, newPassword);
-        
-        res.status(200).json({ 
-            message: "Password has been set successfully",
-            status: "SUCCESS"
-        });
+      const { userId, currentPassword, newPassword } = req.body;
+      await this.authService.setInitialPassword(userId, currentPassword, newPassword);
+      
+      res.status(200).json({ 
+        message: "Password has been set successfully",
+        status: "SUCCESS"
+      });
     } catch (error) {
-        console.error('Set initial password error:', error);
-        if (error instanceof Error) {
-            res.status(400).json({ 
-                message: error.message,
-                status: "ERROR"
-            });
-        } else {
-            res.status(500).json({ 
-                message: "Internal server error",
-                status: "ERROR"
-            });
-        }
+      if (error instanceof Error) {
+        res.status(400).json({ 
+          message: error.message,
+          status: "ERROR"
+        });
+      } else {
+        res.status(500).json({ 
+          message: "Internal server error",
+          status: "ERROR"
+        });
+      }
     }
   }
 }
