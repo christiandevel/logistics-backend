@@ -28,3 +28,10 @@ export const loginSchema = Joi.object({
 		"string.min": "Password must be at least 8 characters",
 	}),
 });
+
+export const verifyEmailSchema = Joi.object({
+	token: Joi.string().required().guid({ version: "uuidv4" }).messages({
+		"any.required": "Token is required",
+		"string.guid": "Token is not valid",
+	}),
+})
