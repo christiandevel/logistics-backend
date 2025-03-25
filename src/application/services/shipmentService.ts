@@ -8,8 +8,8 @@ export class ShipmentService {
 		return this.shipmentRepository.create(shipment);
 	}
 	
-	async findAllShipments(): Promise<Shipment[]> {
-		return this.shipmentRepository.findAll();
+	async findAllShipments(status?: string): Promise<Shipment[]> {
+		return this.shipmentRepository.findAll(status);
 	}
 	
 	async findShipmentById(id: string): Promise<Shipment> {

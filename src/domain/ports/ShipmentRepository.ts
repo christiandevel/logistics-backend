@@ -2,7 +2,7 @@ import { Shipment, ShipmentHistory, ShipmentStatus } from "../entities/shipment"
 
 export interface ShipmentRepository {
 	create(shipment: Omit<Shipment, 'id' | 'driverId' | 'status' | 'createdAt' | 'updatedAt'>): Promise<Shipment>;
-	findAll(): Promise<Shipment[]>;
+	findAll(status?: string): Promise<Shipment[]>;
 	findById(id: string): Promise<Shipment>;
 	findByUserId(userId: string): Promise<Shipment[]>;
 	changeStatus(id: string, status: ShipmentStatus): Promise<Shipment>;

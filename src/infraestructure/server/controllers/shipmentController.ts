@@ -29,7 +29,8 @@ export class ShipmentController {
 
 	findAllShipments = async (req: Request, res: Response): Promise<void> => {
 		try {
-			const shipments = await this.shipmentService.findAllShipments();
+			const status = req.query.status as string | undefined;
+			const shipments = await this.shipmentService.findAllShipments(status);
 			res.json(shipments);
 		} catch (error) {
 			res.status(500).json({ message: 'Error retrieving shipments', status: 'ERROR' });
