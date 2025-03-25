@@ -18,8 +18,13 @@ export class PostgresShipmentRepository implements ShipmentRepository {
 		return result.rows[0] as Shipment;
 	}
 	
-	async findAll(): Promise<Shipment[]> {
-		const result = await this.pool.query('SELECT * FROM shipments');
+	async findAll(status?: string): Promise<Shipment[]> {
+		const query = status 
+			? 'SELECT * FROM shipments WHERE status = $1'
+			: 'SELECT * FROM shipments';
+		
+		const values = status ? [status.toUpperCase()] : [];
+		const result = await this.pool.query(query, values);
 		return result.rows as Shipment[];
 	}
 	
