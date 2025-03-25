@@ -276,10 +276,18 @@ shipmentRoutes.post('/', authenticate, ValidateRequest(createShipmentSchema), sh
  * /api/shipments:
  *   get:
  *     summary: Get all shipments
- *     description: Retrieves all shipments from the system. Requires admin role.
+ *     description: Retrieves all shipments from the system. Can be filtered by status. Requires admin role.
  *     tags: [Shipments]
  *     security:
  *       - BearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [PENDING, PICKED_UP, IN_TRANSIT, DELIVERED, CANCELLED]
+ *         description: Filter shipments by status
+ *         required: false
  *     responses:
  *       200:
  *         description: List of all shipments retrieved successfully
