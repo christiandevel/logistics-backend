@@ -39,7 +39,15 @@ export class PostgresShipmentRepository implements ShipmentRepository {
 	}
 	
 	async changeDriver(id: string, driverId: string): Promise<Shipment> {
-		const result = await this.pool.query('UPDATE shipments SET driver_id = $1 WHERE id = $2 RETURNING *', [driverId, id]);
+		const result = await this.pool.query(
+			`UPDATE shipments 
+			SET driver_id = $1::integer, 
+				assigned_at = NOW(),
+				status = 'PICKED_UP'
+			WHERE id = $2::integer 
+			RETURNING *`,
+			[driverId, id]
+		);
 		return result.rows[0] as Shipment;
 	}
 	
