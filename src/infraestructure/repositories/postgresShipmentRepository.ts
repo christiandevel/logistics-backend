@@ -80,38 +80,36 @@ export class PostgresShipmentRepository implements ShipmentRepository {
 	}
 	
 	async getHistory(id: string): Promise<ShipmentHistory[]> {
-		const result = await this.pool.query('SELECT * FROM history_shipments WHERE shipment_id = $1', [id]);
+		const result = await this.pool.query(
+			'SELECT * FROM history_shipments WHERE shipment_id = $1 ORDER BY created_at DESC',
+			[id]
+		);
 		return result.rows;
 	}
 	
 	async findByDriverId(driverId: string): Promise<Shipment[]> {
 		const query = `
 			SELECT 
-				id,
-				user_id,
-				origin,
-				destination,
-				destination_zipcode,
-				destination_city,
-				weight,
-				width,
-				height,
-				length,
-				product_type,
-				is_fragile,
-				special_instructions,
-				tracking_number,
-				status,
-				estimated_delivery_date,
-				assigned_at,
-				created_at,
-				updated_at
-			FROM shipments
-			WHERE driver_id = $1 AND status != 'PENDING'
-			ORDER BY created_at DESC
+				s.*,
+				jsonb_build_object(
+					'id', u.id,
+					'full_name', u.full_name,
+					'email', u.email
+				) as driver_info
+			FROM shipments s
+			LEFT JOIN users u ON s.driver_id = u.id
+			WHERE s.driver_id = $1 AND s.status != 'PENDING'
+			ORDER BY s.created_at DESC
 		`;
 		
 		const result = await this.pool.query(query, [driverId]);
-		return result.rows as Shipment[];
+		
+		return result.rows.map(row => {
+			const { driver_info, ...shipmentData } = row;
+			return {
+				...shipmentData,
+				driverInfo: driver_info
+			} as Shipment;
+		});
 	}
 }
