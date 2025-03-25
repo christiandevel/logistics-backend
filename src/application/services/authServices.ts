@@ -26,17 +26,23 @@ export class AuthService {
 		const confirmation_token = uuidv4();
 		const confirmation_expires_at = new Date(Date.now() + TOKEN_EXPIRATION.EMAIL_VERIFICATION);
 		
+		const isDriver = userData.role === 'driver';
+		
 		const user = new AuthUser({
 			...userData,
 			password: hashedPassword,
 			confirmation_token,
 			confirmation_expires_at,
+			requires_password_change: isDriver,
+			email_verified: isDriver,
 		});
 		
 		const createdUser = await this.authRepository.registerUser(user);
 		const token = generateToken(createdUser);
 		
-		await this.emailService.sendEmailConfirmationEmail(userData.email, confirmation_token);
+		if (!isDriver) {
+			await this.emailService.sendEmailConfirmationEmail(userData.email, confirmation_token);
+		}
 		
 		return { user: createdUser, token };
 	}

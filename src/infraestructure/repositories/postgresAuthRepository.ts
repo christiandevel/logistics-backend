@@ -7,15 +7,15 @@ export class PostgresAuthRepository implements AuthRepository {
 	constructor(private readonly pool: Pool) {}
 	
 	async registerUser(user: AuthUser): Promise<AuthUser> {
-		const { email, password, full_name, role, confirmation_token, confirmation_expires_at } = user.toJSON();
+		const { email, password, full_name, role, confirmation_token, confirmation_expires_at, requires_password_change, email_verified } = user.toJSON();
 		
 		const query = `
-			INSERT INTO users (email, password, full_name, role, confirmation_token, confirmation_expires_at)
-			VALUES ($1, $2, $3, $4, $5, $6)
+			INSERT INTO users (email, password, full_name, role, confirmation_token, confirmation_expires_at, requires_password_change, email_verified)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 			RETURNING *;
 		`
 		
-		const result = await this.pool.query(query, [email, password, full_name, role, confirmation_token, confirmation_expires_at]);
+		const result = await this.pool.query(query, [email, password, full_name, role, confirmation_token, confirmation_expires_at, requires_password_change, email_verified]);
 		const userData = this.mapRowToAuthUser(result.rows[0]);
 		return new AuthUser(userData);
 	}
