@@ -1,5 +1,11 @@
 export type ShipmentStatus = 'pending' | 'assigned' | 'delivered' | 'canceled';
 
+export interface DriverInfo {
+	id: number;
+	full_name: string;
+	email: string;
+}
+
 export class ShipmentHistory {
 	id?: number;
 	shipmentId: number;
@@ -12,6 +18,7 @@ export interface ShipmentProps {
 	id?: number;
 	userId: number;
 	driverId: number;
+	driverInfo?: DriverInfo;
 	origin: string;
 	destination: string;
 	destinationZipcode: string;
@@ -36,6 +43,7 @@ export class Shipment {
 	id?: number;
 	userId: number;
 	driverId: number;
+	driverInfo?: DriverInfo;
 	origin: string;
 	destination: string;
 	destinationZipcode: string;
@@ -59,6 +67,7 @@ export class Shipment {
 		this.id = props.id;
 		this.userId = props.userId;
 		this.driverId = props.driverId;
+		this.driverInfo = props.driverInfo;
 		this.origin = props.origin;
 		this.destination = props.destination;
 		this.destinationZipcode = props.destinationZipcode;
@@ -77,7 +86,6 @@ export class Shipment {
 		this.createdAt = props.createdAt;
 		this.updatedAt = props.updatedAt;
 		this.history = props.history;	
-		
 	}
 	
 	getId(): number | undefined {
@@ -90,6 +98,10 @@ export class Shipment {
 	
 	getDriverId(): number {
 		return this.driverId;
+	}
+	
+	getDriverInfo(): DriverInfo | undefined {
+		return this.driverInfo;
 	}
 	
 	getOrigin(): string {

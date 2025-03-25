@@ -19,13 +19,36 @@ export class PostgresShipmentRepository implements ShipmentRepository {
 	}
 	
 	async findAll(status?: string): Promise<Shipment[]> {
-		const query = status 
-			? 'SELECT * FROM shipments WHERE status = $1'
-			: 'SELECT * FROM shipments';
+		const query = `
+			SELECT 
+				s.*,
+				CASE 
+					WHEN s.driver_id IS NOT NULL AND s.status != 'PENDING' THEN 
+						jsonb_build_object(
+							'id', u.id,
+							'full_name', u.full_name,
+							'email', u.email
+						)
+					ELSE NULL
+				END as driver_info
+			FROM shipments s
+			LEFT JOIN users u ON s.driver_id = u.id AND s.status != 'PENDING'
+			${status ? 'WHERE s.status = $1' : ''}
+			ORDER BY s.created_at DESC
+		`;
 		
 		const values = status ? [status.toUpperCase()] : [];
 		const result = await this.pool.query(query, values);
-		return result.rows as Shipment[];
+		
+		return result.rows.map(row => {
+			const { driver_info, ...shipmentData } = row;
+			return {
+				...shipmentData,
+				driverInfo: driver_info,
+				// Si el estado es PENDING, aseguramos que no haya información del conductor
+				...(row.status === 'PENDING' ? { driver_id: null, driverInfo: null } : {})
+			} as Shipment;
+		});
 	}
 	
 	async findById(id: string): Promise<Shipment | null> {
