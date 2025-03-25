@@ -7,6 +7,7 @@ import { SocketIOService } from "../websocket/socketIo";
 
 import { authenticate } from "../server/middleware/auth";
 import { checkRole } from "../server/middleware/checkRole";
+import { cacheMiddleware } from "./../server/middleware/cache";
 
 import { ShipmentService } from "../../application/services/shipmentService";
 import { ShipmentController } from "../server/controllers/shipmentController";
@@ -429,11 +430,8 @@ export const initializeShipmentRoutes = (io: Server): Router => {
 	 *       500:
 	 *         description: Internal server error
 	 */
-	console.log('Registering /api/shipments/reports route');
-	shipmentRoutes.get('/reports', authenticate, checkRole(["admin"]), (req, res, next) => {
-		console.log('Reports route hit');
-		shipmentController.getDetailedReports(req, res);
-	});
+
+	shipmentRoutes.get('/reports', authenticate, checkRole(["admin"]), shipmentController.getDetailedReports)
 	
 	/**
 	 * @swagger
@@ -522,8 +520,12 @@ export const initializeShipmentRoutes = (io: Server): Router => {
 	 *       500:
 	 *         description: Internal server error
 	 */
-	console.log('Registering /api/shipments/statistics route');
-	shipmentRoutes.get('/statistics', authenticate, checkRole(["admin"]), shipmentController.getShipmentStatistics);
+	shipmentRoutes.get('/statistics', 
+		authenticate, 
+		checkRole(["admin"]), 
+		cacheMiddleware('shipment_stats'), 
+		shipmentController.getShipmentStatistics
+	);
 
 	/**
 	 * @swagger
