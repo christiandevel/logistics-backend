@@ -1,4 +1,5 @@
 import express from "express";
+import { createServer } from "http";
 import swaggerUi from "swagger-ui-express";
 import cors from "cors";
 
@@ -11,6 +12,7 @@ import userRoutes from "../routes/userRoutes";
 import shipmentRoutes from "../routes/shipmentRoutes";
 
 const app = express();
+const httpServer = createServer(app);
 
 // CORS configuration
 const corsOptions = {
@@ -41,4 +43,4 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
 	res.status(500).send("Internal Server Error");
 });
 
-export default app;
+export { app, httpServer };
