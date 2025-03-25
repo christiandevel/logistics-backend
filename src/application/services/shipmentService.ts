@@ -35,7 +35,7 @@ export class ShipmentService {
 	
 	async changeShipmentDriver(id: string, driverId: string): Promise<Shipment> {
 		const shipment = await this.shipmentRepository.changeDriver(id, driverId);
-		this.realTimeRepository.emit('shipment:driverAssigned', { id, driverId });
+		this.realTimeRepository.emit('shipment:statusChanged', { shipment });
 		return shipment;
 	}
 	
