@@ -81,4 +81,20 @@ export class ShipmentController {
 			res.status(500).json({ message: 'Error retrieving shipment history', status: 'ERROR' });
 		}
 	}
+
+	getDriverShipments = async (req: Request, res: Response): Promise<void> => {
+		try {
+			const driverId = req.user?.id;
+			
+			if (!driverId) {
+				res.status(401).json({ message: 'User not authenticated' });
+			}
+			
+			const shipments = await this.shipmentService.findShipmentsByDriverId(driverId.toString());
+			res.json(shipments);
+		} catch (error) {
+			console.error('Error getting driver shipments:', error);
+			res.status(500).json({ message: 'Internal server error' });
+		}
+	}
 }

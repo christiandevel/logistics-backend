@@ -399,7 +399,7 @@ shipmentRoutes.get('/user/:userId', authenticate, shipmentController.findShipmen
  *             properties:
  *               status:
  *                 type: string
- *                 enum: [PENDING, PICKED_UP, IN_TRANSIT, DELIVERED, CANCELLED]
+ *                 enum: [PENDING, PICKED_UP, IN_TRANSIT, DELIVERED, 	]
  *                 description: New status for the shipment
  *     responses:
  *       200:
@@ -417,7 +417,8 @@ shipmentRoutes.get('/user/:userId', authenticate, shipmentController.findShipmen
  *       500:
  *         description: Internal server error
  */
-shipmentRoutes.put('/:id/status', authenticate, checkRole(["admin"]), shipmentController.changeShipmentStatus);
+
+shipmentRoutes.put('/:id/status', authenticate, checkRole(["admin", "driver"]), shipmentController.changeShipmentStatus);
 
 /**
  * @swagger
@@ -463,7 +464,7 @@ shipmentRoutes.put('/:id/status', authenticate, checkRole(["admin"]), shipmentCo
  *       500:
  *         description: Internal server error
  */
-shipmentRoutes.put('/:id/driver', authenticate, checkRole(["admin"]), shipmentController.changeShipmentDriver);
+shipmentRoutes.put('/:id/driver', authenticate, checkRole(["admin", "user"]), shipmentController.changeShipmentDriver);
 
 /**
  * @swagger
@@ -498,5 +499,31 @@ shipmentRoutes.put('/:id/driver', authenticate, checkRole(["admin"]), shipmentCo
  *         description: Internal server error
  */
 shipmentRoutes.get('/:id/history', authenticate, shipmentController.getShipmentHistory);
+
+/**
+ * @swagger
+ * /api/shipments/driver/assigned:
+ *   get:
+ *     tags: [Shipments]
+ *     summary: Get shipments assigned to the authenticated driver
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of shipments assigned to the driver
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Shipment'
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Driver access required
+ *       500:
+ *         description: Internal server error
+ */
+shipmentRoutes.get('/driver/assigned', authenticate, checkRole(["driver"]), shipmentController.getDriverShipments);
 
 export default shipmentRoutes;

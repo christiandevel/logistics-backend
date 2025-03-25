@@ -32,5 +32,7 @@ export class ShipmentService {
 		return this.shipmentRepository.getHistory(id);
 	}
 	
-	
+	async findShipmentsByDriverId(driverId: string): Promise<Shipment[]> {
+		return this.shipmentRepository.findByDriverId(driverId);
+	}
 }
