@@ -102,6 +102,39 @@ pnpm build
 pnpm start
 ```
 
+### Docker Deployment
+
+To run the application using Docker:
+
+1. Build and start all services:
+```bash
+docker-compose up --build
+```
+
+2. To run in detached mode:
+```bash
+docker-compose up -d --build
+```
+
+3. To stop all services:
+```bash
+docker-compose down
+```
+
+4. To view logs:
+```bash
+docker-compose logs -f
+```
+
+The application will be available at `http://localhost:3000`
+
+Note: The Docker setup includes:
+- Node.js application container
+- PostgreSQL database container
+- Redis container
+- Persistent volumes for database and Redis data
+- Internal network for service communication
+
 ## 🏗️ Project Structure
 
 The project follows Clean Architecture principles with the following structure:
