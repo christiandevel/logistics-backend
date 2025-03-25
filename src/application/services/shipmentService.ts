@@ -1,6 +1,7 @@
 import { Shipment, ShipmentStatus, ShipmentHistory } from "@/domain/entities/shipment";
 import { ShipmentRepository } from "@/domain/ports/ShipmentRepository";
 import { IRealTimeRepository } from "@/domain/ports/RealTimeRepository";
+import { ShipmentReport, ShipmentStatistics } from "../../infraestructure/repositories/postgresShipmentRepository";
 
 export class ShipmentService {
 	constructor(
@@ -44,5 +45,13 @@ export class ShipmentService {
 	
 	async findShipmentsByDriverId(driverId: string): Promise<Shipment[]> {
 		return this.shipmentRepository.findByDriverId(driverId);
+	}
+	
+	async getDetailedReports(startDate?: Date, endDate?: Date, status?: string): Promise<ShipmentReport[]> {
+		return this.shipmentRepository.getDetailedReports(startDate, endDate, status);
+	}
+	
+	async getShipmentStatistics(startDate?: Date, endDate?: Date): Promise<ShipmentStatistics> {
+		return this.shipmentRepository.getShipmentStatistics(startDate, endDate);
 	}
 }

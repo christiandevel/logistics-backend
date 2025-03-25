@@ -16,6 +16,7 @@ import { ValidateRequest } from "../validation/middleware/validationMiddleware";
 const shipmentRoutes = Router();
 
 export const initializeShipmentRoutes = (io: Server): Router => {
+	console.log('Initializing shipment routes...');
 	const shipmentRepository = new PostgresShipmentRepository(pool);
 	const realTimeService = new SocketIOService(io);
 	const shipmentService = new ShipmentService(shipmentRepository, realTimeService);
@@ -309,6 +310,220 @@ export const initializeShipmentRoutes = (io: Server): Router => {
 	 *         description: Internal server error
 	 */
 	shipmentRoutes.get('/', authenticate, checkRole(["admin"]), shipmentController.findAllShipments);
+
+	/**
+	 * @swagger
+	 * /api/shipments/reports:
+	 *   get:
+	 *     summary: Get detailed shipment reports
+	 *     description: Retrieves detailed reports about shipments including delivery times, current status, and driver information.
+	 *     tags: [Shipments]
+	 *     security:
+	 *       - BearerAuth: []
+	 *     parameters:
+	 *       - in: query
+	 *         name: startDate
+	 *         schema:
+	 *           type: string
+	 *           format: date
+	 *         description: Start date for filtering shipments (YYYY-MM-DD)
+	 *         required: false
+	 *       - in: query
+	 *         name: endDate
+	 *         schema:
+	 *           type: string
+	 *           format: date
+	 *         description: End date for filtering shipments (YYYY-MM-DD)
+	 *         required: false
+	 *       - in: query
+	 *         name: status
+	 *         schema:
+	 *           type: string
+	 *           enum: [PENDING, PICKED_UP, IN_TRANSIT, DELIVERED, CANCELLED]
+	 *         description: Filter shipments by status
+	 *         required: false
+	 *     responses:
+	 *       200:
+	 *         description: Detailed reports retrieved successfully
+	 *         content:
+	 *           application/json:
+	 *             schema:
+	 *               type: array
+	 *               items:
+	 *                 type: object
+	 *                 properties:
+	 *                   id:
+	 *                     type: number
+	 *                     description: Shipment ID
+	 *                   trackingNumber:
+	 *                     type: string
+	 *                     description: Unique tracking number
+	 *                   status:
+	 *                     type: string
+	 *                     description: Current shipment status
+	 *                   origin:
+	 *                     type: string
+	 *                     description: Pickup location
+	 *                   destination:
+	 *                     type: string
+	 *                     description: Delivery location
+	 *                   destinationCity:
+	 *                     type: string
+	 *                     description: City of delivery
+	 *                   estimatedDeliveryDate:
+	 *                     type: string
+	 *                     format: date-time
+	 *                     description: Expected delivery date
+	 *                   actualDeliveryDate:
+	 *                     type: string
+	 *                     format: date-time
+	 *                     description: Actual delivery date (if delivered)
+	 *                   deliveryTimeInDays:
+	 *                     type: number
+	 *                     description: Time taken for delivery in days
+	 *                   driverInfo:
+	 *                     type: object
+	 *                     properties:
+	 *                       id:
+	 *                         type: number
+	 *                         description: Driver ID
+	 *                       fullName:
+	 *                         type: string
+	 *                         description: Driver's full name
+	 *                       email:
+	 *                         type: string
+	 *                         description: Driver's email
+	 *                   createdAt:
+	 *                     type: string
+	 *                     format: date-time
+	 *                     description: Shipment creation date
+	 *                   updatedAt:
+	 *                     type: string
+	 *                     format: date-time
+	 *                     description: Last update date
+	 *                   history:
+	 *                     type: array
+	 *                     items:
+	 *                       type: object
+	 *                       properties:
+	 *                         id:
+	 *                           type: number
+	 *                           description: History entry ID
+	 *                         shipmentId:
+	 *                           type: number
+	 *                           description: Associated shipment ID
+	 *                         userId:
+	 *                           type: number
+	 *                           description: User who made the change
+	 *                         notes:
+	 *                           type: string
+	 *                           description: Change description
+	 *                         createdAt:
+	 *                           type: string
+	 *                           format: date-time
+	 *                           description: When the change occurred
+	 *       401:
+	 *         description: Unauthorized - Valid JWT token required
+	 *       403:
+	 *         description: Forbidden - Requires admin role
+	 *       500:
+	 *         description: Internal server error
+	 */
+	console.log('Registering /api/shipments/reports route');
+	shipmentRoutes.get('/reports', authenticate, checkRole(["admin"]), (req, res, next) => {
+		console.log('Reports route hit');
+		shipmentController.getDetailedReports(req, res);
+	});
+	
+	/**
+	 * @swagger
+	 * /api/shipments/statistics:
+	 *   get:
+	 *     summary: Get shipment statistics
+	 *     description: Retrieves statistical information about shipments including counts by status, average delivery times, and distribution by city.
+	 *     tags: [Shipments]
+	 *     security:
+	 *       - BearerAuth: []
+	 *     parameters:
+	 *       - in: query
+	 *         name: startDate
+	 *         schema:
+	 *           type: string
+	 *           format: date
+	 *         description: Start date for filtering shipments (YYYY-MM-DD)
+	 *         required: false
+	 *       - in: query
+	 *         name: endDate
+	 *         schema:
+	 *           type: string
+	 *           format: date
+	 *         description: End date for filtering shipments (YYYY-MM-DD)
+	 *         required: false
+	 *     responses:
+	 *       200:
+	 *         description: Statistics retrieved successfully
+	 *         content:
+	 *           application/json:
+	 *             schema:
+	 *               type: object
+	 *               properties:
+	 *                 success:
+	 *                   type: boolean
+	 *                 data:
+	 *                   type: object
+	 *                   properties:
+	 *                     totalShipments:
+	 *                       type: number
+	 *                     statusCounts:
+	 *                       type: object
+	 *                       properties:
+	 *                         PENDING:
+	 *                           type: number
+	 *                         PICKED_UP:
+	 *                           type: number
+	 *                         IN_TRANSIT:
+	 *                           type: number
+	 *                         DELIVERED:
+	 *                           type: number
+	 *                         CANCELLED:
+	 *                           type: number
+	 *                     averageDeliveryTime:
+	 *                       type: number
+	 *                     totalDelivered:
+	 *                       type: number
+	 *                     totalInTransit:
+	 *                       type: number
+	 *                     totalPending:
+	 *                       type: number
+	 *                     totalCancelled:
+	 *                       type: number
+	 *                     shipmentsByCity:
+	 *                       type: array
+	 *                       items:
+	 *                         type: object
+	 *                         properties:
+	 *                           city:
+	 *                             type: string
+	 *                           count:
+	 *                             type: number
+	 *                     shipmentsByDate:
+	 *                       type: array
+	 *                       items:
+	 *                         type: object
+	 *                         properties:
+	 *                           date:
+	 *                             type: string
+	 *                           count:
+	 *                             type: number
+	 *       401:
+	 *         description: Unauthorized - Valid JWT token required
+	 *       403:
+	 *         description: Forbidden - Requires admin role
+	 *       500:
+	 *         description: Internal server error
+	 */
+	console.log('Registering /api/shipments/statistics route');
+	shipmentRoutes.get('/statistics', authenticate, checkRole(["admin"]), shipmentController.getShipmentStatistics);
 
 	/**
 	 * @swagger

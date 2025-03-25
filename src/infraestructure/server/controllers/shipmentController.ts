@@ -97,4 +97,93 @@ export class ShipmentController {
 			res.status(500).json({ message: 'Internal server error' });
 		}
 	}
+
+	getDetailedReports = async (req: Request, res: Response): Promise<void> => {
+		console.log('getDetailedReports');
+		try {
+			const { startDate, endDate, status } = req.query;
+			
+			// Validate date formats if provided
+			let parsedStartDate: Date | undefined;
+			let parsedEndDate: Date | undefined;
+			
+			if (startDate) {
+				parsedStartDate = new Date(startDate as string);
+				if (isNaN(parsedStartDate.getTime())) {
+					throw new Error('Invalid start date format. Use YYYY-MM-DD');
+				}
+			}
+			
+			if (endDate) {
+				parsedEndDate = new Date(endDate as string);
+				if (isNaN(parsedEndDate.getTime())) {
+					throw new Error('Invalid end date format. Use YYYY-MM-DD');
+				}
+			}
+			
+			// Validate status if provided
+			if (status && !['PENDING', 'PICKED_UP', 'IN_TRANSIT', 'DELIVERED', 'CANCELLED'].includes(status as string)) {
+				throw new Error('Invalid status. Must be one of: PENDING, PICKED_UP, IN_TRANSIT, DELIVERED, CANCELLED');
+			}
+			
+			const reports = await this.shipmentService.getDetailedReports(
+				parsedStartDate,
+				parsedEndDate,
+				status as string | undefined
+			);
+			
+			res.json({
+				success: true,
+				data: reports
+			});
+		} catch (error) {
+			console.error('Error getting detailed reports:', error);
+			res.status(500).json({ 
+				success: false,
+				message: error instanceof Error ? error.message : 'Error retrieving detailed reports',
+				status: 'ERROR' 
+			});
+		}
+	}
+
+	getShipmentStatistics = async (req: Request, res: Response): Promise<void> => {
+		try {
+			const { startDate, endDate } = req.query;
+			
+			// Validate date formats if provided
+			let parsedStartDate: Date | undefined;
+			let parsedEndDate: Date | undefined;
+			
+			if (startDate) {
+				parsedStartDate = new Date(startDate as string);
+				if (isNaN(parsedStartDate.getTime())) {
+					throw new Error('Invalid start date format. Use YYYY-MM-DD');
+				}
+			}
+			
+			if (endDate) {
+				parsedEndDate = new Date(endDate as string);
+				if (isNaN(parsedEndDate.getTime())) {
+					throw new Error('Invalid end date format. Use YYYY-MM-DD');
+				}
+			}
+			
+			const statistics = await this.shipmentService.getShipmentStatistics(
+				parsedStartDate,
+				parsedEndDate
+			);
+			
+			res.json({
+				success: true,
+				data: statistics
+			});
+		} catch (error) {
+			console.error('Error getting shipment statistics:', error);
+			res.status(500).json({ 
+				success: false,
+				message: error instanceof Error ? error.message : 'Error retrieving shipment statistics',
+				status: 'ERROR' 
+			});
+		}
+	}
 }
