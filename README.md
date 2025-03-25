@@ -68,6 +68,30 @@ POSTGRES_PASSWORD=your_database_password
 
 Note: Replace the placeholder values with the actual credentials from your Render PostgreSQL database connection string.
 
+### Initial Database Users
+
+When the database is initialized, three default users are automatically created:
+
+1. **Administrator**
+   - Email: admin@admin.com
+   - Password: admin2025
+   - Role: admin
+   - Full Name: Administrator
+
+2. **Regular User**
+   - Email: user@user.com
+   - Password: user2025
+   - Role: user
+   - Full Name: User
+
+3. **Driver**
+   - Email: driver@driver.com
+   - Password: driver2025
+   - Role: driver
+   - Full Name: Driver
+
+All users are created with email verification completed and no password change required.
+
 ### Email Configuration (Mailtrap.io)
 
 To set up email testing using Mailtrap.io:
